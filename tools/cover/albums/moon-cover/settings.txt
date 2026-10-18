@@ -1,0 +1,18 @@
+Painting image: https://images.metmuseum.org/CRDImages/ep/original/DP-31997-001-NEW.jpg
+Save it as: moon-met-438417.jpg
+
+Crop: 0.45 0.50 0.90
+Light leak: 0.35
+Hue shift: -12
+
+Command (run from tools/cover/):
+python make_cover.py moon-met-438417.jpg "OUT_FOLDER" \
+  --crop 0.45 0.50 0.90 \
+  --light-leak 0.35 \
+  --hue -12 \
+  --title "Two Men Contemplating the Moon" \
+  --artist "Caspar David Friedrich" \
+  --year "ca. 1825–30" \
+  --museum "The Metropolitan Museum of Art, New York (Wrightsman Fund, 2000; 2000.51)" \
+  --url "https://www.metmuseum.org/art/collection/search/438417" \
+  --license "Public domain. The Met Open Access marks this object isPublicDomain: true (checked via The Met Collection API, object 438417, on 2026-10-18)."
