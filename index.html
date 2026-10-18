@@ -1073,12 +1073,13 @@
       }
     }
 
+    // SVG icons have no .hidden property, so toggle the attribute itself.
     function setPlayIcon(playing) {
-      document.getElementById('icon-play').hidden = playing;
-      document.getElementById('icon-pause').hidden = !playing;
+      document.getElementById('icon-play').toggleAttribute('hidden', playing);
+      document.getElementById('icon-pause').toggleAttribute('hidden', !playing);
       document.getElementById('np-play').setAttribute('aria-label', playing ? 'Pause' : 'Play');
-      document.querySelector('.qp-icon-play').hidden = playing;
-      document.querySelector('.qp-icon-pause').hidden = !playing;
+      document.querySelector('.qp-icon-play').toggleAttribute('hidden', playing);
+      document.querySelector('.qp-icon-pause').toggleAttribute('hidden', !playing);
     }
 
     const seek = document.getElementById('seek');
