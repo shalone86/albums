@@ -1,0 +1,9 @@
+{
+  // Serves this folder as a static site (Cloudflare Workers static assets).
+  // Workers Builds swaps in the dashboard's Worker name if it differs.
+  "name": "albums",
+  "compatibility_date": "2026-10-13",
+  "assets": {
+    "directory": "."
+  }
+}
