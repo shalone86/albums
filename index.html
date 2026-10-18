@@ -104,6 +104,8 @@
 
     button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
     a { color: inherit; }
+    html { scroll-behavior: smooth; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
     svg[hidden] { display: none; }
     :focus-visible { outline: 1px solid var(--white); outline-offset: 3px; }
 
@@ -129,6 +131,68 @@
     }
 
     .status { color: var(--muted); padding: 48px 0; text-align: center; font-style: italic; }
+
+    /* ---------- Timeline: every album as a small cover, tap to jump ---------- */
+    .timeline { margin: 20px -16px 0; }
+    .timeline[hidden] { display: none; }
+    .timeline-track {
+      display: flex;
+      gap: 22px;
+      list-style: none;
+      overflow-x: auto;
+      scroll-snap-type: x proximity;
+      scroll-padding-inline: 16px;
+      scrollbar-width: none;
+      padding: 6px 16px 16px;
+      /* The hairline runs through the dots and scrolls with the albums. */
+      background: linear-gradient(var(--line-strong), var(--line-strong)) 0 118px / 100% 1px no-repeat local;
+    }
+    .timeline-track::-webkit-scrollbar { display: none; }
+    /* Centred when the albums fit, scrollable from the start when they don't. */
+    .timeline-track > li:first-child { margin-left: auto; }
+    .timeline-track > li:last-child { margin-right: auto; }
+    .timeline-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 104px;
+      text-decoration: none;
+      scroll-snap-align: start;
+    }
+    .timeline-item .cover {
+      width: 104px;
+      border-radius: 3px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--line);
+      transition: transform 0.2s ease;
+    }
+    .timeline-item:hover .cover, .timeline-item:focus-visible .cover { transform: translateY(-3px); }
+    .timeline-dot {
+      width: 7px; height: 7px;
+      margin: 5px 0 9px;
+      border-radius: 50%;
+      background: var(--bg);
+      box-shadow: 0 0 0 1px var(--white);
+    }
+    .timeline-item:hover .timeline-dot { background: var(--white); }
+    .timeline-month {
+      font-family: var(--sans);
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .timeline-title {
+      margin-top: 2px;
+      font-size: 0.98rem;
+      line-height: 1.15;
+      text-align: center;
+      color: var(--text);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
 
     /* ---------- Albums ---------- */
     .album {
@@ -313,6 +377,9 @@
       <img class="logo" src="/logo.png" alt="" width="64" height="92">
       <h1>Shalone Cason</h1>
       <p class="tagline">Human-made songs, for fun and the love of God. Free to hear and use for everyone, CC0 forever.</p>
+      <nav class="timeline" id="timeline" aria-label="All albums" hidden>
+        <ol class="timeline-track" id="timeline-track"></ol>
+      </nav>
     </header>
 
     <main id="albums" aria-label="Albums"></main>
@@ -436,7 +503,28 @@
 
       status.hidden = main.children.length > 0;
       if (!main.children.length) status.textContent = 'The first albums are on their way.';
+      buildTimeline();
       scrollToHash();
+    }
+
+    // Albums for the timeline strip, in page order (newest first).
+    const timelineAlbums = [];
+    function buildTimeline() {
+      if (timelineAlbums.length < 2) return;
+      const track = document.getElementById('timeline-track');
+      timelineAlbums.forEach((a) => {
+        const li = el('li');
+        const link = el('a', 'timeline-item');
+        link.href = `#album-${a.slug}`;
+        link.setAttribute('aria-label', [a.name, a.when].filter(Boolean).join(', '));
+        const cover = coverTile(a.thumb, a.name);
+        link.append(cover, el('span', 'timeline-dot'));
+        if (a.when) link.append(el('span', 'timeline-month', a.when.replace(/^(\w{3})\w*/, '$1')));
+        link.append(el('span', 'timeline-title', a.name));
+        li.append(link);
+        track.append(li);
+      });
+      document.getElementById('timeline').hidden = false;
     }
 
     function renderAlbum(album, usedSlugs) {
@@ -531,6 +619,7 @@
 
       info.append(actions, list);
       section.append(art, info);
+      timelineAlbums.push({ slug, name, when, thumb });
       return section;
     }
 
