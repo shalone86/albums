@@ -1,0 +1,17 @@
+Painting image: https://images.metmuseum.org/CRDImages/ep/original/DT11964.jpg
+Save it as: storm-met-435997.jpg
+
+Crop: 0.45 0.235 0.52
+Light leak: 0.35
+Hue shift: none
+
+Command (run from tools/cover/):
+python make_cover.py storm-met-435997.jpg "OUT_FOLDER" \
+  --crop 0.45 0.235 0.52 \
+  --light-leak 0.35 \
+  --title "The Storm" \
+  --artist "Pierre-Auguste Cot" \
+  --year "1880" \
+  --museum "The Metropolitan Museum of Art, New York (Bequest of Catharine Lorillard Wolfe, 1887; 87.15.134)" \
+  --url "https://www.metmuseum.org/art/collection/search/435997" \
+  --license "Public domain. The Met Open Access marks this object isPublicDomain: true (checked via The Met Collection API, object 435997, on 2026-10-18)."

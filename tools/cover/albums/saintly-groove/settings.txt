@@ -1,0 +1,16 @@
+Painting image: https://images.metmuseum.org/CRDImages/rl/original/DP-40104-001.jpg
+Save it as: creation-met-458971.jpg
+
+Crop: 0.3125 0.441 0.6292
+Light leak: series default
+Hue shift: none
+
+Command (run from tools/cover/):
+python make_cover.py creation-met-458971.jpg "OUT_FOLDER" \
+  --crop 0.3125 0.441 0.6292 \
+  --title "The Creation of the World and the Expulsion from Paradise" \
+  --artist "Giovanni di Paolo (Giovanni di Paolo di Grazia)" \
+  --year "1445" \
+  --museum "The Metropolitan Museum of Art, New York (Robert Lehman Collection, 1975; 1975.1.31)" \
+  --url "https://www.metmuseum.org/art/collection/search/458971" \
+  --license "Public domain. The Met Open Access marks this object isPublicDomain: true (checked via The Met Collection API, object 458971, on 2026-10-18)."
