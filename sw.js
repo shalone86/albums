@@ -1,12 +1,13 @@
 // Keeps the album site's own files (page, font, logo, icons) available
 // offline. Songs, covers and albums.json come from daily.shalonely.com and
 // are never cached here. Bump VERSION whenever these files change.
-const VERSION = 'albums-v1';
+const VERSION = 'albums-v2';
 const SHELL = [
   '/',
   '/fonts/cormorant-garamond.woff2',
   '/fonts/cormorant-garamond-italic.woff2',
   '/logo.png',
+  '/me.jpg',
   '/dust.svg',
   '/favicon-32.png',
   '/icon-192.png'

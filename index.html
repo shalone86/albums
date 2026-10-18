@@ -8,6 +8,8 @@
   <meta name="theme-color" content="#0a0a0a">
   <meta property="og:title" content="Shalone Cason · Albums">
   <meta property="og:description" content="Human-made songs, for fun and the love of God. Free to hear and use for everyone, CC0 forever.">
+  <meta property="og:image" content="https://albums.shalonely.com/me.jpg">
+  <meta property="og:type" content="music.musician">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -113,7 +115,6 @@
 
     /* ---------- Header ---------- */
     header { padding: 64px 0 24px; text-align: center; }
-    .logo { width: 64px; height: auto; display: block; margin: 0 auto 22px; opacity: 0.95; }
     h1 {
       font-family: var(--serif);
       font-weight: 500;
@@ -129,6 +130,11 @@
       max-width: 30em;
       margin: 16px auto 0;
     }
+
+    /* Photo beside the name, like an album row; stacked on phones. */
+    .hero-row { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr); gap: 48px; align-items: center; text-align: left; margin-bottom: 24px; }
+    .hero-photo { width: 100%; height: auto; aspect-ratio: 1; display: block; border-radius: 4px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--line); }
+    .hero-words .tagline { margin: 18px 0 0; }
 
     .status { color: var(--muted); padding: 48px 0; text-align: center; font-style: italic; }
 
@@ -521,7 +527,9 @@
     @media (max-width: 760px) {
       body { font-size: 18px; }
       header { padding: 44px 0 8px; }
-      .logo { width: 52px; margin-bottom: 18px; }
+      .hero-row { grid-template-columns: 1fr; gap: 26px; text-align: center; }
+      .hero-photo { width: min(78vw, 340px); margin: 0 auto; }
+      .hero-words .tagline { margin: 14px auto 0; }
       .album { grid-template-columns: 1fr; gap: 28px; padding: 48px 0; }
       .album:first-child { padding-top: 32px; }
       .album-art { position: static; }
@@ -639,9 +647,13 @@
 
   <div class="wrap">
     <header>
-      <img class="logo" src="/logo.png" alt="" width="64" height="92">
-      <h1>Shalone Cason</h1>
-      <p class="tagline">Human-made songs, for fun and the love of God. Free to hear and use for everyone, CC0 forever.</p>
+      <div class="hero-row">
+        <img class="hero-photo" src="/me.jpg" alt="Shalone Cason" width="900" height="900">
+        <div class="hero-words">
+          <h1>Shalone Cason</h1>
+          <p class="tagline">Human-made songs, for fun and the love of God. Free to hear and use for everyone, CC0 forever.</p>
+        </div>
+      </div>
       <nav class="timeline" id="timeline" aria-label="All albums" hidden>
         <ol class="timeline-track" id="timeline-track"></ol>
       </nav>
