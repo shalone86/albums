@@ -23,3 +23,17 @@ Before or after any change, check and flag the following:
 9. Understanding: If you implement something non-trivial, give me a 2–3 sentence explanation of how it works so I can maintain it without you.
 
 Keep warnings brief and specific. Don't block me; flag the risk and let me decide.
+
+# Album covers
+
+Covers are made with `tools/cover/make_cover.py`. Its settings at the top are the series look (rounded card on black, fixed grain/dust/scratch overlay, light leaks, ivory S logo, "human-made" in Caladea). Don't change them for one album; use `--light-leak` and `--hue` instead.
+
+For each new album, I give the title and a mood:
+
+1. Find 5–6 paintings that are public domain or CC0, confirmed by the museum's own per-image flag: The Met (`isPublicDomain: true`), Art Institute of Chicago (`is_public_domain: true`), Cleveland Museum of Art (`share_license_status: CC0`), Rijksmuseum, or National Gallery of Art open data. Never Google Images or Pinterest. No nudity, including sheer or see-through clothing, anywhere in the crop. Pick paintings that still read as a small square thumbnail.
+2. Show them as one numbered contact sheet with title, artist, year, museum and license under each, plus the proposed square crop and a thumbnail. Say plainly if a license or crop is uncertain.
+3. Once I pick one, run `make_cover.py` and show the cover at full size and as small thumbnails. Iterate until I'm happy.
+4. Hand off `cover.jpg` (3000×3000), `cover-800.jpg` and `credits.txt` for the album's folder on the media server (named like `My Album [MAY2026]`).
+5. Save the album's `credits.txt` and a `settings.txt` (image link, crop, light leak, hue and the exact command) in `tools/cover/albums/<album>/`, commit and push to `main`.
+
+If you install anything, pin the exact version and tell me.
