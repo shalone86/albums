@@ -1,0 +1,43 @@
+# Shalone Cason · Albums
+
+> Human-made songs by Shalone Cason, made for fun and the love of God. Every song is released under CC0 1.0 (public domain). You may download, copy, remix and redistribute everything, for any purpose, with no attribution required.
+
+The website (https://albums.shalonely.com) builds its album list with JavaScript, so the raw HTML has few links. Use the catalog file below instead. Everything is served from https://daily.shalonely.com/.
+
+## Catalog
+
+- [albums.json](https://daily.shalonely.com/albums.json): a JSON list of albums, newest first.
+
+Each album has `albumName`, `month` (YYYY-MM), `zipUrl` (the whole album as a ZIP, or null), `coverArt`, and `tracks`. Each track has `title`, `trackNum` and `path` (the MP3).
+
+All paths are relative to https://daily.shalonely.com/ and should be URL-encoded.
+
+## Downloading
+
+- A whole album: fetch its `zipUrl` when there is one.
+- Single songs: fetch each track's `path`.
+
+Example (Python), downloading every album:
+
+```python
+import json, urllib.parse, urllib.request
+BASE = "https://daily.shalonely.com/"
+HEADERS = {"User-Agent": "my-downloader/1.0"}
+def get(path):
+    req = urllib.request.Request(BASE + urllib.parse.quote(path), headers=HEADERS)
+    return urllib.request.urlopen(req).read()
+for album in json.loads(get("albums.json")):
+    for track in album["tracks"]:
+        open(track["path"].split("/")[-1], "wb").write(get(track["path"]))
+```
+
+Please send a descriptive User-Agent and download at a modest pace.
+
+## Related sites
+
+- [Shalone's Daily Beats](https://shalonely.com/llms.txt): a beat a day, all CC0.
+- [Cyril & Methodius Media](https://methodius.media/llms.txt): Catholic lofi, pop and ambient settings of prayers.
+
+## Contact
+
+hello@shalonely.com

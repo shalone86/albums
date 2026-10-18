@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Shalone Cason · Albums</title>
+  <meta name="description" content="Human-made songs, for fun and the love of God. Free to hear and use for everyone, CC0 forever.">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta property="og:title" content="Shalone Cason · Albums">
+  <meta property="og:description" content="Human-made songs, for fun and the love of God. Free to hear and use for everyone, CC0 forever.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/json" href="https://daily.shalonely.com/albums.json" title="Album catalog">
+  <link rel="help" href="/llms.txt" title="How to download everything">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface-2: #171717;
+      --line: rgba(255, 255, 255, 0.08);
+      --line-strong: rgba(255, 255, 255, 0.18);
+      --text: #ededed;
+      --muted: #8c8c8c;
+      --white: #ffffff;
+      --player-h: 76px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: calc(var(--player-h) + env(safe-area-inset-bottom) + 24px);
+    }
+    /* A faint film grain over everything, drawn in code. */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0.07;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+    svg[hidden] { display: none; }
+    a { color: inherit; }
+    :focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+
+    .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+
+    header { padding: 72px 0 40px; }
+    h1 { font-size: 2.1rem; font-weight: 600; letter-spacing: 0.01em; color: var(--white); }
+    .tagline { margin-top: 10px; color: var(--muted); max-width: 34em; }
+
+    .status { color: var(--muted); padding: 24px 0; }
+
+    /* ---------- Albums ---------- */
+    .album {
+      border-top: 1px solid var(--line);
+      scroll-margin-top: 16px;
+    }
+    .album:last-child { border-bottom: 1px solid var(--line); }
+    .album > summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 0;
+      cursor: pointer;
+    }
+    .album > summary::-webkit-details-marker { display: none; }
+    .album > summary:hover .album-title { color: var(--white); }
+    .album-text { flex: 1; min-width: 0; }
+    .album-title { font-size: 1.1rem; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+    .album-meta { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+    .chevron { color: var(--muted); transition: transform 0.2s ease; flex-shrink: 0; }
+    .album[open] .chevron { transform: rotate(90deg); }
+
+    .cover {
+      position: relative;
+      flex-shrink: 0;
+      width: 72px;
+      aspect-ratio: 1;
+      border-radius: 3px;
+      overflow: hidden;
+      background: var(--surface-2);
+      box-shadow: 0 0 0 1px var(--line);
+    }
+    .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* No cover image yet: matte black with the S. */
+    .cover-fallback {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Georgia, "Times New Roman", serif;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 2rem;
+    }
+    .cover-fallback span {
+      position: absolute;
+      left: 8%; right: 8%; bottom: 6%;
+      font-family: inherit;
+      font-style: normal;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .album-body { padding: 4px 0 28px; display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
+    .album-body .cover { width: 100%; }
+    .album-body .cover-fallback { font-size: 5rem; }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--text);
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .btn:hover { border-color: var(--white); color: var(--white); }
+    .btn-primary { background: var(--white); border-color: var(--white); color: #000; }
+    .btn-primary:hover { background: #d9d9d9; color: #000; }
+
+    .tracks { list-style: none; }
+    .track {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 4px;
+    }
+    .track-play {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 10px 8px;
+      text-align: left;
+      border-radius: 4px;
+    }
+    .track-play:hover { background: var(--surface); }
+    .track-num { color: var(--muted); font-size: 0.8rem; width: 1.6em; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+    .track-title { overflow-wrap: anywhere; }
+    .track.playing .track-title { color: var(--white); font-weight: 600; }
+    .track.playing .track-num { color: var(--white); }
+    .track-dl {
+      flex-shrink: 0;
+      width: 36px; height: 36px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--muted);
+      border-radius: 4px;
+      text-decoration: none;
+    }
+    .track-dl:hover { color: var(--white); background: var(--surface); }
+
+    footer { padding: 48px 0 24px; color: var(--muted); font-size: 0.85rem; }
+    footer p + p { margin-top: 6px; }
+    footer a { color: var(--text); text-underline-offset: 3px; }
+
+    /* ---------- Player ---------- */
+    .player {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 40;
+      background: rgba(10, 10, 10, 0.96);
+      border-top: 1px solid var(--line);
+      padding-bottom: env(safe-area-inset-bottom);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+    .player[hidden] { display: none; }
+    .player-inner { max-width: 760px; margin: 0 auto; padding: 0 16px; height: var(--player-h); display: flex; align-items: center; gap: 12px; }
+    .player .cover { width: 48px; }
+    .player .cover-fallback { font-size: 1.4rem; }
+    .np-text { flex: 1; min-width: 0; }
+    .np-title, .np-album { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .np-title { font-weight: 600; font-size: 0.95rem; color: var(--white); }
+    .np-album { font-size: 0.8rem; color: var(--muted); }
+    .np-buttons { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .np-btn { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text); }
+    .np-btn:hover { color: var(--white); background: var(--surface-2); }
+    .np-play { background: var(--white); color: #000; width: 44px; height: 44px; }
+    .np-play:hover { background: #d9d9d9; color: #000; }
+    .np-time { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; flex-shrink: 0; width: 6.5em; text-align: right; }
+    /* The seek bar runs along the top edge of the player. */
+    .seek {
+      -webkit-appearance: none;
+      appearance: none;
+      position: absolute;
+      left: 0; right: 0; top: -7px;
+      width: 100%;
+      height: 14px;
+      background: transparent;
+      cursor: pointer;
+      --pct: 0%;
+    }
+    .seek::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(to right, var(--white) var(--pct), rgba(255,255,255,0.15) var(--pct)); }
+    .seek::-moz-range-track { height: 2px; background: linear-gradient(to right, var(--white) var(--pct), rgba(255,255,255,0.15) var(--pct)); }
+    .seek::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; margin-top: -5px; border-radius: 50%; background: var(--white); opacity: 0; transition: opacity 0.15s; }
+    .seek::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 50%; background: var(--white); opacity: 0; }
+    .player:hover .seek::-webkit-slider-thumb, .seek:focus-visible::-webkit-slider-thumb { opacity: 1; }
+    .player:hover .seek::-moz-range-thumb { opacity: 1; }
+
+    @media (max-width: 600px) {
+      header { padding: 48px 0 28px; }
+      h1 { font-size: 1.8rem; }
+      .album-body { grid-template-columns: 1fr; gap: 16px; }
+      .album-body .cover { max-width: 320px; }
+      .np-time, .np-prev { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Shalone Cason</h1>
+      <p class="tagline">Human-made songs, for fun and the love of God. Free to hear and use for everyone, CC0 forever.</p>
+    </header>
+
+    <main id="albums" aria-label="Albums"></main>
+    <p class="status" id="status">Loading albums…</p>
+
+    <footer>
+      <p>All songs are CC0 (public domain): listen, download, share and reuse them however you like.</p>
+      <p>More: <a href="https://shalonely.com">Daily Beats</a> · <a href="mailto:hello@shalonely.com">Contact</a></p>
+    </footer>
+  </div>
+
+  <div class="player" id="player" hidden>
+    <input type="range" class="seek" id="seek" min="0" max="1000" value="0" step="1" aria-label="Seek">
+    <div class="player-inner">
+      <div class="cover" id="np-cover"></div>
+      <div class="np-text">
+        <div class="np-title" id="np-title"></div>
+        <div class="np-album" id="np-album"></div>
+      </div>
+      <span class="np-time" id="np-time"></span>
+      <div class="np-buttons">
+        <button class="np-btn np-prev" id="np-prev" aria-label="Previous song">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
+        </button>
+        <button class="np-btn np-play" id="np-play" aria-label="Play">
+          <svg id="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>
+          <svg id="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" hidden><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+        </button>
+        <button class="np-btn" id="np-next" aria-label="Next song">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <audio id="audio" preload="none"></audio>
+
+  <script>
+    const MEDIA_BASE = 'https://daily.shalonely.com';
+    const CATALOG_URL = `${MEDIA_BASE}/albums.json`;
+    const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const ARTIST = 'Shalone Cason';
+
+    const audio = document.getElementById('audio');
+    const allTracks = [];   // every song, in page order (newest album first)
+    let playlist = [];      // what Next and Previous walk through
+    let pos = -1;           // index of the playing song in playlist
+
+    const mediaUrl = (path) => `${MEDIA_BASE}/${path.split('/').map(encodeURIComponent).join('/')}`;
+    const slugify = (text) => text.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const monthLabel = (month) => {
+      const m = /^(\d{4})-(\d{2})$/.exec(month || '');
+      return m && MONTH_NAMES[+m[2] - 1] ? `${MONTH_NAMES[+m[2] - 1]} ${m[1]}` : '';
+    };
+    const formatTime = (s) => (isFinite(s) && s >= 0) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00';
+
+    function el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text != null) node.textContent = text;
+      return node;
+    }
+
+    // A cover tile: the image when there is one, otherwise matte black with the S.
+    function coverTile(src, title, showTitle) {
+      const tile = el('div', 'cover');
+      const fallback = () => {
+        tile.textContent = '';
+        const f = el('div', 'cover-fallback', 'S');
+        if (showTitle && title) f.append(el('span', null, title));
+        tile.append(f);
+      };
+      if (src) {
+        const img = el('img');
+        img.src = src;
+        img.alt = title ? `${title} cover` : '';
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.onerror = fallback;
+        tile.append(img);
+      } else {
+        fallback();
+      }
+      return tile;
+    }
+
+    function skipBadEntry(kind, entry, err) {
+      console.warn(`Skipped a bad ${kind} in albums.json:`, entry, err);
+    }
+
+    async function loadAlbums() {
+      const status = document.getElementById('status');
+      let catalog;
+      try {
+        const res = await fetch(CATALOG_URL, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        catalog = await res.json();
+        if (!Array.isArray(catalog)) throw new Error('albums.json is not a list of albums');
+      } catch (err) {
+        console.error('Could not load albums:', err);
+        status.textContent = 'The albums couldn’t load right now. Please try again in a minute.';
+        return;
+      }
+
+      const main = document.getElementById('albums');
+      const usedSlugs = new Set();
+      catalog.forEach((album) => {
+        const start = allTracks.length;
+        try {
+          const node = renderAlbum(album, usedSlugs);
+          if (node) main.append(node);
+        } catch (err) {
+          allTracks.length = start;
+          skipBadEntry('album', album, err);
+        }
+      });
+
+      status.hidden = main.children.length > 0;
+      if (!main.children.length) status.textContent = 'The first albums are on their way.';
+      openFromHash();
+    }
+
+    function renderAlbum(album, usedSlugs) {
+      if (!album || typeof album.albumName !== 'string' || !album.albumName.trim()) throw new Error('album has no name');
+      const name = album.albumName.trim();
+      const tracks = (Array.isArray(album.tracks) ? album.tracks : []).filter((t) => {
+        const ok = t && typeof t.path === 'string' && t.path.trim() && (t.title == null || typeof t.title === 'string');
+        if (!ok) skipBadEntry('song', t, 'missing a file path or has a bad title');
+        return ok;
+      });
+      if (!tracks.length && !album.zipUrl) return null;
+
+      let slug = slugify(name) || 'album';
+      while (usedSlugs.has(slug)) slug += '-2';
+      usedSlugs.add(slug);
+
+      const thumb = album.coverThumb ? mediaUrl(album.coverThumb) : (album.coverArt ? mediaUrl(album.coverArt) : null);
+      const big = album.coverMedium ? mediaUrl(album.coverMedium) : (album.coverArt ? mediaUrl(album.coverArt) : thumb);
+      const when = monthLabel(album.month);
+      const count = `${tracks.length} ${tracks.length === 1 ? 'song' : 'songs'}`;
+
+      const details = el('details', 'album');
+      details.id = `album-${slug}`;
+
+      const summary = el('summary');
+      const text = el('div', 'album-text');
+      text.append(el('div', 'album-title', name), el('div', 'album-meta', [when, count].filter(Boolean).join(' · ')));
+      const chevron = el('span', 'chevron');
+      chevron.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>';
+      summary.append(coverTile(thumb, name, false), text, chevron);
+
+      const body = el('div', 'album-body');
+      const side = el('div');
+      const list = el('ol', 'tracks');
+      const albumTracks = [];
+
+      tracks.forEach((t, i) => {
+        const track = {
+          title: (t.title || '').trim() || `Track ${i + 1}`,
+          album: name,
+          url: mediaUrl(t.path),
+          fileName: t.path.split('/').pop(),
+          thumb,
+          big,
+          details,
+          row: null
+        };
+        const li = el('li', 'track');
+        const play = el('button', 'track-play');
+        play.type = 'button';
+        play.append(el('span', 'track-num', String(i + 1)), el('span', 'track-title', track.title));
+        play.addEventListener('click', () => {
+          // Play from this song, then on through the rest of the page.
+          playFrom(allTracks, allTracks.indexOf(track));
+        });
+        const dl = el('a', 'track-dl');
+        dl.href = track.url;
+        dl.download = track.fileName;
+        dl.title = `Download ${track.title}`;
+        dl.setAttribute('aria-label', `Download ${track.title}`);
+        dl.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14"/></svg>';
+        dl.addEventListener('click', (e) => downloadFile(e, track.url, track.fileName));
+        li.append(play, dl);
+        track.row = li;
+        list.append(li);
+        albumTracks.push(track);
+        allTracks.push(track);
+      });
+
+      const actions = el('div', 'actions');
+      if (albumTracks.length) {
+        const playBtn = el('button', 'btn btn-primary', '▶ Play');
+        playBtn.type = 'button';
+        playBtn.addEventListener('click', () => playFrom(allTracks, allTracks.indexOf(albumTracks[0])));
+        actions.append(playBtn);
+        if (albumTracks.length > 1) {
+          const shuffleBtn = el('button', 'btn', 'Shuffle');
+          shuffleBtn.type = 'button';
+          shuffleBtn.addEventListener('click', () => playFrom(shuffled(albumTracks), 0));
+          actions.append(shuffleBtn);
+        }
+      }
+      if (album.zipUrl) {
+        const zip = el('a', 'btn', '↓ Album');
+        zip.href = mediaUrl(album.zipUrl);
+        zip.download = '';
+        actions.append(zip);
+      }
+      const share = el('button', 'btn', 'Share');
+      share.type = 'button';
+      share.addEventListener('click', () => shareAlbum(slug, name, share));
+      actions.append(share);
+
+      side.append(actions, list);
+      body.append(coverTile(big, name, true), side);
+      details.append(summary, body);
+      details.addEventListener('toggle', () => {
+        if (details.open) history.replaceState(null, '', `#album-${slug}`);
+      });
+      return details;
+    }
+
+    function shuffled(list) {
+      const copy = list.slice();
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    // ---------- Playback ----------
+    function playFrom(list, index) {
+      if (!list.length || index < 0 || index >= list.length) return;
+      playlist = list;
+      pos = index;
+      const track = playlist[pos];
+      audio.src = track.url;
+      audio.play().catch(() => {});
+      showNowPlaying(track);
+    }
+
+    function step(dir) {
+      if (pos < 0) return;
+      // Previous restarts the song if it's more than a few seconds in.
+      if (dir < 0 && audio.currentTime > 3) { audio.currentTime = 0; return; }
+      const next = pos + dir;
+      if (next >= 0 && next < playlist.length) playFrom(playlist, next);
+    }
+
+    function togglePlay() {
+      if (pos < 0) {
+        if (allTracks.length) playFrom(allTracks, 0);
+        return;
+      }
+      if (audio.paused) audio.play().catch(() => {}); else audio.pause();
+    }
+
+    function showNowPlaying(track) {
+      document.getElementById('player').hidden = false;
+      document.getElementById('np-title').textContent = track.title;
+      document.getElementById('np-album').textContent = track.album;
+      const cover = document.getElementById('np-cover');
+      cover.replaceWith(Object.assign(coverTile(track.thumb, track.album, false), { id: 'np-cover' }));
+      document.querySelectorAll('.track.playing').forEach((row) => row.classList.remove('playing'));
+      track.row.classList.add('playing');
+      document.title = `${track.title} · ${ARTIST}`;
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: track.title,
+          artist: ARTIST,
+          album: track.album,
+          artwork: track.big ? [{ src: track.big, sizes: '800x800', type: 'image/jpeg' }] : []
+        });
+      }
+    }
+
+    function setPlayIcon(playing) {
+      document.getElementById('icon-play').hidden = playing;
+      document.getElementById('icon-pause').hidden = !playing;
+      document.getElementById('np-play').setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    }
+
+    const seek = document.getElementById('seek');
+    let seeking = false;
+    function updateProgress() {
+      const dur = audio.duration;
+      const pct = dur > 0 ? (audio.currentTime / dur) * 100 : 0;
+      if (!seeking) seek.value = Math.round(pct * 10);
+      seek.style.setProperty('--pct', `${seeking ? seek.value / 10 : pct}%`);
+      document.getElementById('np-time').textContent = `${formatTime(audio.currentTime)} / ${formatTime(dur)}`;
+    }
+    seek.addEventListener('input', () => {
+      seeking = true;
+      seek.style.setProperty('--pct', `${seek.value / 10}%`);
+    });
+    seek.addEventListener('change', () => {
+      if (audio.duration > 0) audio.currentTime = (seek.value / 1000) * audio.duration;
+      seeking = false;
+    });
+
+    audio.addEventListener('play', () => setPlayIcon(true));
+    audio.addEventListener('pause', () => setPlayIcon(false));
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('loadedmetadata', updateProgress);
+    audio.addEventListener('ended', () => {
+      if (pos + 1 < playlist.length) step(1);
+      else setPlayIcon(false);
+    });
+    document.getElementById('np-play').addEventListener('click', togglePlay);
+    document.getElementById('np-next').addEventListener('click', () => step(1));
+    document.getElementById('np-prev').addEventListener('click', () => step(-1));
+
+    if ('mediaSession' in navigator) {
+      const handlers = {
+        play: () => audio.play().catch(() => {}),
+        pause: () => audio.pause(),
+        previoustrack: () => step(-1),
+        nexttrack: () => step(1),
+        seekto: (d) => { if (d.seekTime != null) audio.currentTime = d.seekTime; }
+      };
+      for (const [action, fn] of Object.entries(handlers)) {
+        try { navigator.mediaSession.setActionHandler(action, fn); } catch (e) { /* not supported here */ }
+      }
+    }
+
+    // ---------- Downloads and sharing ----------
+    // Browsers ignore the download attribute for files on another site, so
+    // fetch the file and save it; if that fails, open it instead.
+    async function downloadFile(e, url, fileName) {
+      e.preventDefault();
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blobUrl = URL.createObjectURL(await res.blob());
+        const a = el('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.append(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      } catch (err) {
+        window.open(url, '_blank', 'noopener');
+      }
+    }
+
+    async function shareAlbum(slug, name, button) {
+      const url = `${location.origin}${location.pathname}#album-${slug}`;
+      if (navigator.share) {
+        try { await navigator.share({ title: `${name} · ${ARTIST}`, url }); } catch (e) { /* cancelled */ }
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        button.textContent = 'Link copied';
+      } catch (e) {
+        button.textContent = 'Copy failed';
+      }
+      setTimeout(() => { button.textContent = 'Share'; }, 2000);
+    }
+
+    // A shared link (#album-name) opens that album.
+    function openFromHash() {
+      const id = decodeURIComponent(location.hash.slice(1));
+      if (!id.startsWith('album-')) return;
+      const target = document.getElementById(id);
+      if (!target) return;
+      target.open = true;
+      target.scrollIntoView({ block: 'start' });
+    }
+    window.addEventListener('hashchange', openFromHash);
+
+    loadAlbums();
+  </script>
+</body>
+</html>
