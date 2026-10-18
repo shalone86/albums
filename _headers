@@ -3,4 +3,10 @@
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), camera=(), microphone=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://daily.shalonely.com; media-src 'self' https://daily.shalonely.com; connect-src 'self' https://daily.shalonely.com; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://daily.shalonely.com; media-src 'self' https://daily.shalonely.com; connect-src 'self' https://daily.shalonely.com; frame-ancestors 'none'
+
+/sw.js
+  Cache-Control: no-cache
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable

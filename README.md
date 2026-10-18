@@ -10,9 +10,18 @@ The page reads `albums.json` from the Beats media server (https://daily.shalonel
 
 - The tag sets the album's month and is removed from the name shown.
 - Songs play in album order: a number at the start of the file name ("01 Song"), then the MP3's track number.
-- `cover.jpg` is the cover; `cover-800.jpg`, if present, is used for the bigger cover when an album is open.
+- `cover.jpg` is the cover. The catalog script makes a 1200px copy in `_covers/` for the site, and a 320px one in `_thumbs/` for the player.
 - A `.zip` in the folder becomes the "↓ Album" download.
 - Daily Beats skips these folders, so album songs never show up there.
+
+## Files
+
+- `index.html`: the whole page (styles and script inline).
+- `fonts/`: Cormorant Garamond (SIL Open Font License, see `fonts/OFL.txt`), served from the site itself.
+- `logo.png`, `favicon*`, `icon-*.png`, `apple-touch-icon.png`: made from `tools/cover/logo-white.png`.
+- `dust.svg`: the dust and scratch layer of the film texture (the grain itself is drawn in code).
+- `site.webmanifest` and `sw.js`: make the site installable. The service worker caches only the site's own files; bump `VERSION` in `sw.js` when you change them.
+- `wrangler.jsonc` and `.assetsignore`: deploy the folder as a Cloudflare Worker with static assets, leaving `tools/`, this README and CLAUDE.md off the public site.
 
 ## Setup notes
 

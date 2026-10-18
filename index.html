@@ -8,20 +8,42 @@
   <meta name="theme-color" content="#0a0a0a">
   <meta property="og:title" content="Shalone Cason · Albums">
   <meta property="og:description" content="Human-made songs, for fun and the love of God. Free to hear and use for everyone, CC0 forever.">
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Shalone">
+  <link rel="preload" href="/fonts/cormorant-garamond.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="alternate" type="application/json" href="https://daily.shalonely.com/albums.json" title="Album catalog">
   <link rel="help" href="/llms.txt" title="How to download everything">
   <style>
+    @font-face {
+      font-family: 'Cormorant Garamond';
+      font-style: normal;
+      font-weight: 300 700;
+      font-display: swap;
+      src: url('/fonts/cormorant-garamond.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Cormorant Garamond';
+      font-style: italic;
+      font-weight: 300 700;
+      font-display: swap;
+      src: url('/fonts/cormorant-garamond-italic.woff2') format('woff2');
+    }
     :root {
       color-scheme: dark;
       --bg: #0a0a0a;
-      --surface: #111111;
-      --surface-2: #171717;
-      --line: rgba(255, 255, 255, 0.08);
-      --line-strong: rgba(255, 255, 255, 0.18);
-      --text: #ededed;
-      --muted: #8c8c8c;
-      --white: #ffffff;
+      --surface: #121212;
+      --line: rgba(255, 255, 255, 0.09);
+      --line-strong: rgba(255, 255, 255, 0.22);
+      --text: #e9e6df;
+      --muted: #8d8a83;
+      --white: #f6f3ec;
+      --serif: 'Cormorant Garamond', 'Cormorant', Garamond, 'Times New Roman', serif;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, 'Helvetica Neue', Arial, sans-serif;
       --player-h: 76px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,176 +51,228 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
-      line-height: 1.5;
+      font-family: var(--serif);
+      font-size: 19px;
+      line-height: 1.45;
+      /* Cormorant's default old-style figures make "CC0" read as "CCo". */
+      font-variant-numeric: lining-nums;
       min-height: 100vh;
-      padding-bottom: calc(var(--player-h) + env(safe-area-inset-bottom) + 24px);
+      overflow-x: hidden;
+      padding-bottom: calc(var(--player-h) + env(safe-area-inset-bottom) + 32px);
     }
-    /* A faint film grain over everything, drawn in code. */
-    body::before {
-      content: "";
+
+    /* ---------- Film texture: moving grain, dust and scratches, vignette ---------- */
+    .grain, .dust, .vignette {
       position: fixed;
-      inset: 0;
-      z-index: 50;
       pointer-events: none;
-      opacity: 0.07;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      z-index: 60;
     }
+    .grain {
+      inset: -120px;
+      opacity: 0.16;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.1 -0.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      animation: grain 0.9s steps(6) infinite;
+    }
+    @keyframes grain {
+      0% { transform: translate(0, 0); }
+      17% { transform: translate(-40px, 22px); }
+      33% { transform: translate(28px, -36px); }
+      50% { transform: translate(-18px, 48px); }
+      67% { transform: translate(44px, 12px); }
+      83% { transform: translate(-30px, -26px); }
+      100% { transform: translate(0, 0); }
+    }
+    .dust {
+      inset: 0;
+      opacity: 0.22;
+      background: url('/dust.svg') 0 0 / 700px 900px repeat;
+      animation: dust 3.2s steps(4) infinite;
+    }
+    @keyframes dust {
+      0% { background-position: 0 0; }
+      25% { background-position: 210px 380px; }
+      50% { background-position: 460px 120px; }
+      75% { background-position: 90px 640px; }
+    }
+    .vignette {
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .grain, .dust { animation: none; }
+    }
+
     button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
-    svg[hidden] { display: none; }
     a { color: inherit; }
-    :focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+    svg[hidden] { display: none; }
+    :focus-visible { outline: 1px solid var(--white); outline-offset: 3px; }
 
-    .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
 
-    header { padding: 72px 0 40px; }
-    h1 { font-size: 2.1rem; font-weight: 600; letter-spacing: 0.01em; color: var(--white); }
-    .tagline { margin-top: 10px; color: var(--muted); max-width: 34em; }
+    /* ---------- Header ---------- */
+    header { padding: 64px 0 24px; text-align: center; }
+    .logo { width: 64px; height: auto; display: block; margin: 0 auto 22px; opacity: 0.95; }
+    h1 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: clamp(2.6rem, 8vw, 4.6rem);
+      line-height: 1;
+      letter-spacing: 0.01em;
+      color: var(--white);
+    }
+    .tagline {
+      font-style: italic;
+      font-size: clamp(1.1rem, 2.6vw, 1.35rem);
+      color: var(--muted);
+      max-width: 30em;
+      margin: 16px auto 0;
+    }
 
-    .status { color: var(--muted); padding: 24px 0; }
+    .status { color: var(--muted); padding: 48px 0; text-align: center; font-style: italic; }
 
     /* ---------- Albums ---------- */
     .album {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 48px;
+      align-items: start;
+      padding: 72px 0;
       border-top: 1px solid var(--line);
-      scroll-margin-top: 16px;
+      scroll-margin-top: 8px;
     }
-    .album:last-child { border-bottom: 1px solid var(--line); }
-    .album > summary {
-      list-style: none;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 16px 0;
-      cursor: pointer;
+    .album:first-child { border-top: 0; padding-top: 40px; }
+    .album-art {
+      position: sticky;
+      top: 24px;
     }
-    .album > summary::-webkit-details-marker { display: none; }
-    .album > summary:hover .album-title { color: var(--white); }
-    .album-text { flex: 1; min-width: 0; }
-    .album-title { font-size: 1.1rem; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
-    .album-meta { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
-    .chevron { color: var(--muted); transition: transform 0.2s ease; flex-shrink: 0; }
-    .album[open] .chevron { transform: rotate(90deg); }
-
     .cover {
       position: relative;
-      flex-shrink: 0;
-      width: 72px;
+      width: 100%;
       aspect-ratio: 1;
-      border-radius: 3px;
       overflow: hidden;
-      background: var(--surface-2);
-      box-shadow: 0 0 0 1px var(--line);
+      background: var(--surface);
+      border-radius: 4px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--line);
     }
     .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    /* No cover image yet: matte black with the S. */
+    /* No cover image yet: matte black with the logo. */
     .cover-fallback {
       position: absolute;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: Georgia, "Times New Roman", serif;
-      font-style: italic;
-      color: rgba(255, 255, 255, 0.85);
-      font-size: 2rem;
     }
-    .cover-fallback span {
-      position: absolute;
-      left: 8%; right: 8%; bottom: 6%;
-      font-family: inherit;
-      font-style: normal;
-      font-size: 0.8rem;
+    .cover-fallback img { width: 34%; height: auto; opacity: 0.85; }
+
+    .album-month {
+      font-family: var(--sans);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
       color: var(--muted);
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
+    .album-title {
+      font-weight: 500;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      line-height: 1.02;
+      color: var(--white);
+      margin: 10px 0 8px;
+      overflow-wrap: anywhere;
+    }
+    .album-count { font-style: italic; color: var(--muted); }
 
-    .album-body { padding: 4px 0 28px; display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
-    .album-body .cover { width: 100%; }
-    .album-body .cover-fallback { font-size: 5rem; }
-
-    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0 28px; }
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      height: 36px;
-      padding: 0 14px;
+      gap: 8px;
+      height: 40px;
+      padding: 0 18px;
       border: 1px solid var(--line-strong);
       border-radius: 999px;
-      font-size: 0.85rem;
+      font-family: var(--sans);
+      font-size: 0.72rem;
       font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
       text-decoration: none;
       color: var(--text);
       transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     }
     .btn:hover { border-color: var(--white); color: var(--white); }
-    .btn-primary { background: var(--white); border-color: var(--white); color: #000; }
-    .btn-primary:hover { background: #d9d9d9; color: #000; }
+    .btn-primary { background: var(--white); border-color: var(--white); color: #0a0a0a; }
+    .btn-primary:hover { background: #d9d6cf; color: #0a0a0a; }
+    .btn svg { flex-shrink: 0; }
 
-    .tracks { list-style: none; }
-    .track {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      border-radius: 4px;
-    }
+    .tracks { list-style: none; border-top: 1px solid var(--line); }
+    .track { display: flex; align-items: center; border-bottom: 1px solid var(--line); }
     .track-play {
       flex: 1;
       min-width: 0;
       display: flex;
       align-items: baseline;
-      gap: 12px;
-      padding: 10px 8px;
+      gap: 16px;
+      padding: 12px 4px;
       text-align: left;
-      border-radius: 4px;
     }
-    .track-play:hover { background: var(--surface); }
-    .track-num { color: var(--muted); font-size: 0.8rem; width: 1.6em; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
-    .track-title { overflow-wrap: anywhere; }
-    .track.playing .track-title { color: var(--white); font-weight: 600; }
+    .track-num {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      color: var(--muted);
+      width: 1.6em;
+      text-align: right;
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .track-title { font-size: 1.2rem; font-weight: 500; overflow-wrap: anywhere; transition: color 0.15s; }
+    .track-play:hover .track-title { color: var(--white); }
+    .track.playing .track-title { color: var(--white); font-style: italic; }
     .track.playing .track-num { color: var(--white); }
     .track-dl {
       flex-shrink: 0;
-      width: 36px; height: 36px;
+      width: 40px; height: 40px;
       display: inline-flex; align-items: center; justify-content: center;
       color: var(--muted);
-      border-radius: 4px;
       text-decoration: none;
     }
-    .track-dl:hover { color: var(--white); background: var(--surface); }
+    .track-dl:hover { color: var(--white); }
 
-    footer { padding: 48px 0 24px; color: var(--muted); font-size: 0.85rem; }
+    footer {
+      padding: 56px 0 24px;
+      border-top: 1px solid var(--line);
+      text-align: center;
+      color: var(--muted);
+      font-style: italic;
+    }
     footer p + p { margin-top: 6px; }
-    footer a { color: var(--text); text-underline-offset: 3px; }
+    footer a { color: var(--text); text-underline-offset: 4px; }
 
     /* ---------- Player ---------- */
     .player {
       position: fixed;
       left: 0; right: 0; bottom: 0;
       z-index: 40;
-      background: rgba(10, 10, 10, 0.96);
+      background: rgba(10, 10, 10, 0.94);
       border-top: 1px solid var(--line);
       padding-bottom: env(safe-area-inset-bottom);
-      -webkit-backdrop-filter: blur(8px);
-      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
     }
     .player[hidden] { display: none; }
-    .player-inner { max-width: 760px; margin: 0 auto; padding: 0 16px; height: var(--player-h); display: flex; align-items: center; gap: 12px; }
-    .player .cover { width: 48px; }
-    .player .cover-fallback { font-size: 1.4rem; }
+    .player-inner { max-width: 1040px; margin: 0 auto; padding: 0 16px; height: var(--player-h); display: flex; align-items: center; gap: 14px; }
+    .player .cover { width: 50px; flex-shrink: 0; border-radius: 3px; box-shadow: 0 0 0 1px var(--line); }
     .np-text { flex: 1; min-width: 0; }
     .np-title, .np-album { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .np-title { font-weight: 600; font-size: 0.95rem; color: var(--white); }
-    .np-album { font-size: 0.8rem; color: var(--muted); }
+    .np-title { font-weight: 600; font-size: 1.15rem; color: var(--white); line-height: 1.2; }
+    .np-album { font-style: italic; font-size: 0.95rem; color: var(--muted); }
     .np-buttons { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
     .np-btn { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text); }
-    .np-btn:hover { color: var(--white); background: var(--surface-2); }
-    .np-play { background: var(--white); color: #000; width: 44px; height: 44px; }
-    .np-play:hover { background: #d9d9d9; color: #000; }
-    .np-time { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; flex-shrink: 0; width: 6.5em; text-align: right; }
+    .np-btn:hover { color: var(--white); background: var(--surface); }
+    .np-play { background: var(--white); color: #0a0a0a; width: 44px; height: 44px; }
+    .np-play:hover { background: #d9d6cf; color: #0a0a0a; }
+    .np-time { font-family: var(--sans); font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; flex-shrink: 0; width: 6.5em; text-align: right; }
     /* The seek bar runs along the top edge of the player. */
     .seek {
       -webkit-appearance: none;
@@ -218,18 +292,25 @@
     .player:hover .seek::-webkit-slider-thumb, .seek:focus-visible::-webkit-slider-thumb { opacity: 1; }
     .player:hover .seek::-moz-range-thumb { opacity: 1; }
 
-    @media (max-width: 600px) {
-      header { padding: 48px 0 28px; }
-      h1 { font-size: 1.8rem; }
-      .album-body { grid-template-columns: 1fr; gap: 16px; }
-      .album-body .cover { max-width: 320px; }
+    @media (max-width: 760px) {
+      body { font-size: 18px; }
+      header { padding: 44px 0 8px; }
+      .logo { width: 52px; margin-bottom: 18px; }
+      .album { grid-template-columns: 1fr; gap: 28px; padding: 48px 0; }
+      .album:first-child { padding-top: 32px; }
+      .album-art { position: static; }
       .np-time, .np-prev { display: none; }
     }
   </style>
 </head>
 <body>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="dust" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
   <div class="wrap">
     <header>
+      <img class="logo" src="/logo.png" alt="" width="64" height="92">
       <h1>Shalone Cason</h1>
       <p class="tagline">Human-made songs, for fun and the love of God. Free to hear and use for everyone, CC0 forever.</p>
     </header>
@@ -239,7 +320,7 @@
 
     <footer>
       <p>All songs are CC0 (public domain): listen, download, share and reuse them however you like.</p>
-      <p>More: <a href="https://shalonely.com">Daily Beats</a> · <a href="mailto:hello@shalonely.com">Contact</a></p>
+      <p><a href="https://shalonely.com">Daily Beats</a> · <a href="mailto:hello@shalonely.com">Contact</a></p>
     </footer>
   </div>
 
@@ -273,6 +354,8 @@
     const CATALOG_URL = `${MEDIA_BASE}/albums.json`;
     const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const ARTIST = 'Shalone Cason';
+    const ICON_PLAY = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>';
+    const ICON_DOWNLOAD = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14"/></svg>';
 
     const audio = document.getElementById('audio');
     const allTracks = [];   // every song, in page order (newest album first)
@@ -294,13 +377,16 @@
       return node;
     }
 
-    // A cover tile: the image when there is one, otherwise matte black with the S.
-    function coverTile(src, title, showTitle) {
+    // A cover tile: the image when there is one, otherwise matte black with the logo.
+    function coverTile(src, title) {
       const tile = el('div', 'cover');
       const fallback = () => {
         tile.textContent = '';
-        const f = el('div', 'cover-fallback', 'S');
-        if (showTitle && title) f.append(el('span', null, title));
+        const f = el('div', 'cover-fallback');
+        const logo = el('img');
+        logo.src = '/logo.png';
+        logo.alt = '';
+        f.append(logo);
         tile.append(f);
       };
       if (src) {
@@ -350,7 +436,7 @@
 
       status.hidden = main.children.length > 0;
       if (!main.children.length) status.textContent = 'The first albums are on their way.';
-      openFromHash();
+      scrollToHash();
     }
 
     function renderAlbum(album, usedSlugs) {
@@ -367,26 +453,26 @@
       while (usedSlugs.has(slug)) slug += '-2';
       usedSlugs.add(slug);
 
-      const thumb = album.coverThumb ? mediaUrl(album.coverThumb) : (album.coverArt ? mediaUrl(album.coverArt) : null);
-      const big = album.coverMedium ? mediaUrl(album.coverMedium) : (album.coverArt ? mediaUrl(album.coverArt) : thumb);
+      const pick = (...paths) => { const p = paths.find((x) => typeof x === 'string' && x); return p ? mediaUrl(p) : null; };
+      const thumb = pick(album.coverThumb, album.coverMedium, album.coverArt);
+      const big = pick(album.coverMedium, album.coverArt, album.coverThumb);
+
+      const section = el('section', 'album');
+      section.id = `album-${slug}`;
+
+      const art = el('div', 'album-art');
+      const cover = coverTile(big, name);
+      if (cover.querySelector('img')) cover.querySelector('img').loading = usedSlugs.size === 1 ? 'eager' : 'lazy';
+      art.append(cover);
+
+      const info = el('div', 'album-info');
       const when = monthLabel(album.month);
-      const count = `${tracks.length} ${tracks.length === 1 ? 'song' : 'songs'}`;
+      if (when) info.append(el('div', 'album-month', when));
+      info.append(el('h2', 'album-title', name));
+      info.append(el('div', 'album-count', `${tracks.length} ${tracks.length === 1 ? 'song' : 'songs'}`));
 
-      const details = el('details', 'album');
-      details.id = `album-${slug}`;
-
-      const summary = el('summary');
-      const text = el('div', 'album-text');
-      text.append(el('div', 'album-title', name), el('div', 'album-meta', [when, count].filter(Boolean).join(' · ')));
-      const chevron = el('span', 'chevron');
-      chevron.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>';
-      summary.append(coverTile(thumb, name, false), text, chevron);
-
-      const body = el('div', 'album-body');
-      const side = el('div');
       const list = el('ol', 'tracks');
       const albumTracks = [];
-
       tracks.forEach((t, i) => {
         const track = {
           title: (t.title || '').trim() || `Track ${i + 1}`,
@@ -395,23 +481,20 @@
           fileName: t.path.split('/').pop(),
           thumb,
           big,
-          details,
           row: null
         };
         const li = el('li', 'track');
         const play = el('button', 'track-play');
         play.type = 'button';
         play.append(el('span', 'track-num', String(i + 1)), el('span', 'track-title', track.title));
-        play.addEventListener('click', () => {
-          // Play from this song, then on through the rest of the page.
-          playFrom(allTracks, allTracks.indexOf(track));
-        });
+        // Play from this song, then on through the rest of the page.
+        play.addEventListener('click', () => playFrom(allTracks, allTracks.indexOf(track)));
         const dl = el('a', 'track-dl');
         dl.href = track.url;
         dl.download = track.fileName;
         dl.title = `Download ${track.title}`;
         dl.setAttribute('aria-label', `Download ${track.title}`);
-        dl.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14"/></svg>';
+        dl.innerHTML = ICON_DOWNLOAD;
         dl.addEventListener('click', (e) => downloadFile(e, track.url, track.fileName));
         li.append(play, dl);
         track.row = li;
@@ -422,8 +505,9 @@
 
       const actions = el('div', 'actions');
       if (albumTracks.length) {
-        const playBtn = el('button', 'btn btn-primary', '▶ Play');
+        const playBtn = el('button', 'btn btn-primary');
         playBtn.type = 'button';
+        playBtn.innerHTML = `${ICON_PLAY}<span>Play</span>`;
         playBtn.addEventListener('click', () => playFrom(allTracks, allTracks.indexOf(albumTracks[0])));
         actions.append(playBtn);
         if (albumTracks.length > 1) {
@@ -434,9 +518,10 @@
         }
       }
       if (album.zipUrl) {
-        const zip = el('a', 'btn', '↓ Album');
+        const zip = el('a', 'btn');
         zip.href = mediaUrl(album.zipUrl);
         zip.download = '';
+        zip.innerHTML = `${ICON_DOWNLOAD}<span>Album</span>`;
         actions.append(zip);
       }
       const share = el('button', 'btn', 'Share');
@@ -444,13 +529,9 @@
       share.addEventListener('click', () => shareAlbum(slug, name, share));
       actions.append(share);
 
-      side.append(actions, list);
-      body.append(coverTile(big, name, true), side);
-      details.append(summary, body);
-      details.addEventListener('toggle', () => {
-        if (details.open) history.replaceState(null, '', `#album-${slug}`);
-      });
-      return details;
+      info.append(actions, list);
+      section.append(art, info);
+      return section;
     }
 
     function shuffled(list) {
@@ -494,7 +575,7 @@
       document.getElementById('np-title').textContent = track.title;
       document.getElementById('np-album').textContent = track.album;
       const cover = document.getElementById('np-cover');
-      cover.replaceWith(Object.assign(coverTile(track.thumb, track.album, false), { id: 'np-cover' }));
+      cover.replaceWith(Object.assign(coverTile(track.thumb, track.album), { id: 'np-cover' }));
       document.querySelectorAll('.track.playing').forEach((row) => row.classList.remove('playing'));
       track.row.classList.add('playing');
       document.title = `${track.title} · ${ARTIST}`;
@@ -503,7 +584,7 @@
           title: track.title,
           artist: ARTIST,
           album: track.album,
-          artwork: track.big ? [{ src: track.big, sizes: '800x800', type: 'image/jpeg' }] : []
+          artwork: track.big ? [{ src: track.big, sizes: '1200x1200', type: 'image/jpeg' }] : []
         });
       }
     }
@@ -593,18 +674,23 @@
       setTimeout(() => { button.textContent = 'Share'; }, 2000);
     }
 
-    // A shared link (#album-name) opens that album.
-    function openFromHash() {
+    // A shared link (#album-name) scrolls to that album.
+    function scrollToHash() {
       const id = decodeURIComponent(location.hash.slice(1));
       if (!id.startsWith('album-')) return;
       const target = document.getElementById(id);
-      if (!target) return;
-      target.open = true;
-      target.scrollIntoView({ block: 'start' });
+      if (target) target.scrollIntoView({ block: 'start' });
     }
-    window.addEventListener('hashchange', openFromHash);
+    window.addEventListener('hashchange', scrollToHash);
 
     loadAlbums();
+
+    // Installable app: the service worker keeps the page itself available offline.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch((err) => console.warn('Service worker not registered:', err));
+      });
+    }
   </script>
 </body>
 </html>

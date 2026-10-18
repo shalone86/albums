@@ -1,0 +1,15 @@
+{
+  "name": "Shalone Cason",
+  "short_name": "Shalone",
+  "description": "Human-made songs, for fun and the love of God. Free to hear and use for everyone, CC0 forever.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
