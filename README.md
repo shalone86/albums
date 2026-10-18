@@ -4,7 +4,7 @@ The album site for albums.shalonely.com: a single static page (`index.html`) hos
 
 ## How it works
 
-The page reads `albums.json` from the Beats media server (https://daily.shalonely.com) and lists every album, newest first. Clicking an album opens its songs; the player at the bottom plays from there on through the rest of the page.
+The page reads `albums.json` from the Beats media server (https://daily.shalonely.com) and shows every album, newest first, with a timeline of covers at the top. Tapping a song plays it and then carries on through the page. The player has a queue (+ on any song), a sleep timer, download and share for the playing song, and on phones it opens into a full-screen player. Song links look like `#track-<album>-<song>`.
 
 `albums.json` is written by `generate_catalog.py` on the home server, in the same run as the Daily Beats catalog. Any folder inside the Beats folder whose name has a month tag, like `Sunday Drive [MAY2026]`, becomes an album:
 

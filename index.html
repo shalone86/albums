@@ -294,6 +294,8 @@
     .track-play:hover .track-title { color: var(--white); }
     .track.playing .track-title { color: var(--white); font-style: italic; }
     .track.playing .track-num { color: var(--white); }
+    .track { transition: background 0.6s ease; }
+    .track.flash { background: rgba(255, 255, 255, 0.08); }
     .track-dl {
       flex-shrink: 0;
       width: 40px; height: 40px;
@@ -325,18 +327,43 @@
       backdrop-filter: blur(10px);
     }
     .player[hidden] { display: none; }
-    .player-inner { max-width: 1040px; margin: 0 auto; padding: 0 16px; height: var(--player-h); display: flex; align-items: center; gap: 14px; }
-    .player .cover { width: 50px; flex-shrink: 0; border-radius: 3px; box-shadow: 0 0 0 1px var(--line); }
+    .player-inner { max-width: 1040px; margin: 0 auto; padding: 0 16px; min-height: var(--player-h); display: flex; align-items: center; gap: 14px; }
+    .np-art { width: 50px; flex-shrink: 0; }
+    .np-art .cover { border-radius: 3px; box-shadow: 0 0 0 1px var(--line); }
     .np-text { flex: 1; min-width: 0; }
     .np-title, .np-album { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .np-title { font-weight: 600; font-size: 1.15rem; color: var(--white); line-height: 1.2; }
     .np-album { font-style: italic; font-size: 0.95rem; color: var(--muted); }
+    .np-progress { display: flex; align-items: center; flex-shrink: 0; font-family: var(--sans); font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .np-dur::before { content: "\00a0/\00a0"; }
     .np-buttons { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
     .np-btn { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text); }
     .np-btn:hover { color: var(--white); background: var(--surface); }
     .np-play { background: var(--white); color: #0a0a0a; width: 44px; height: 44px; }
     .np-play:hover { background: #d9d6cf; color: #0a0a0a; }
-    .np-time { font-family: var(--sans); font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; flex-shrink: 0; width: 6.5em; text-align: right; }
+    .np-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .np-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      font-family: var(--sans);
+      font-size: 0.64rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: var(--text);
+    }
+    .np-action:hover, .np-action.active { border-color: var(--white); color: var(--white); }
+    @media (max-width: 1000px) {
+      .np-action { width: 32px; padding: 0; }
+      .np-action .label { display: none; }
+    }
     /* The seek bar runs along the top edge of the player. */
     .seek {
       -webkit-appearance: none;
@@ -347,6 +374,7 @@
       height: 14px;
       background: transparent;
       cursor: pointer;
+      touch-action: none;
       --pct: 0%;
     }
     .seek::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(to right, var(--white) var(--pct), rgba(255,255,255,0.15) var(--pct)); }
@@ -356,6 +384,140 @@
     .player:hover .seek::-webkit-slider-thumb, .seek:focus-visible::-webkit-slider-thumb { opacity: 1; }
     .player:hover .seek::-moz-range-thumb { opacity: 1; }
 
+    /* Phone-only pieces of the full player. */
+    .np-handle, .np-close, .np-upnext, .np-backdrop { display: none; }
+
+    /* Sleep timer: a popover above the bar on desktop, a row in the full
+       player on phones. */
+    .np-sleep { display: none; flex-direction: column; gap: 10px; }
+    .np-sleep.open {
+      display: flex;
+      position: absolute;
+      bottom: calc(100% + 10px);
+      right: 16px;
+      width: 330px;
+      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    }
+    .np-sleep-label, .qp-label, .np-upnext-label {
+      font-family: var(--sans);
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .np-sleep-options { display: flex; gap: 6px; }
+    .np-sleep-options button {
+      flex: 1;
+      min-height: 36px;
+      padding: 0 6px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      font-family: var(--sans);
+      font-size: 0.74rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .np-sleep-options button:hover { border-color: var(--white); }
+    .np-sleep-options button[aria-pressed="true"] { background: var(--white); border-color: var(--white); color: #0a0a0a; }
+    .np-sleep-status { font-style: italic; color: var(--muted); }
+
+    /* ---------- Queue ("Up next") ---------- */
+    .track-queue {
+      flex-shrink: 0;
+      width: 40px; height: 40px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--muted);
+    }
+    .track-queue:hover, .track-queue.queued { color: var(--white); }
+
+    .queue-panel[hidden] { display: none; }
+    .queue-panel {
+      position: fixed;
+      right: 16px;
+      bottom: 90px;
+      z-index: 55;
+      width: 390px;
+      max-height: min(560px, 70vh);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 14px 12px 12px;
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: 12px;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.65);
+    }
+    .qp-handle { display: none; }
+    .qp-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 6px 4px; }
+    .qp-title { font-weight: 500; font-size: 1.5rem; line-height: 1.1; color: var(--white); }
+    .qp-count { display: block; font-style: italic; color: var(--muted); font-size: 0.95rem; }
+    .qp-header-actions { display: flex; gap: 6px; }
+    .qp-clear, .qp-close {
+      height: 34px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      font-family: var(--sans);
+      font-size: 0.64rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .qp-clear { padding: 0 14px; }
+    .qp-close { width: 34px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+    .qp-clear:hover, .qp-close:hover { border-color: var(--white); }
+    .qp-now, .qp-label, .qp-mini { display: none; }
+    .qp-empty { padding: 20px 8px; text-align: center; font-style: italic; color: var(--muted); }
+    .qp-thumb { width: 44px; flex-shrink: 0; }
+    .qp-thumb.cover { border-radius: 3px; box-shadow: 0 0 0 1px var(--line); }
+    .queue-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    .queue-list li { min-height: 60px; display: flex; align-items: center; gap: 6px; padding: 6px 2px 6px 0; border-radius: 6px; }
+    .qp-play { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; text-align: left; -webkit-tap-highlight-color: transparent; }
+    .qp-play:hover .qp-song { color: var(--white); }
+    .qp-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .qp-song { font-size: 1.1rem; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .qp-album { font-style: italic; font-size: 0.92rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .queue-remove, .queue-grip {
+      flex-shrink: 0;
+      width: 38px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .queue-remove { font-size: 1.3rem; }
+    /* touch-action: none keeps a finger drag on the handle from scrolling. */
+    .queue-grip { cursor: grab; touch-action: none; }
+    .queue-remove:hover, .queue-grip:hover, .queue-grip:focus-visible { color: var(--white); }
+    .queue-list.reordering li { transition: transform 0.15s ease; }
+    .queue-list.reordering li.dragging {
+      transition: none;
+      position: relative;
+      z-index: 1;
+      background: #1d1d1d;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+      cursor: grabbing;
+    }
+
+    @keyframes sheet-in {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
     @media (max-width: 760px) {
       body { font-size: 18px; }
       header { padding: 44px 0 8px; }
@@ -363,7 +525,110 @@
       .album { grid-template-columns: 1fr; gap: 28px; padding: 48px 0; }
       .album:first-child { padding-top: 32px; }
       .album-art { position: static; }
-      .np-time, .np-prev { display: none; }
+
+      /* Small bar: cover, song, play and next. Tap it or swipe up for the
+         full player. */
+      .player-inner { gap: 12px; }
+      .np-art { width: 44px; }
+      .np-progress, .np-prev, .np-actions { display: none; }
+      .np-handle { display: block; position: absolute; top: 0; left: 0; right: 0; height: 16px; cursor: pointer; }
+      .np-handle::after {
+        content: "";
+        position: absolute;
+        top: 5px; left: 50%;
+        width: 40px; height: 4px;
+        transform: translateX(-50%);
+        border-radius: 2px;
+        background: var(--muted);
+        opacity: 0.5;
+      }
+
+      /* Full player: a sheet over the page. */
+      .np-backdrop.active { display: block; position: fixed; inset: 0; z-index: 45; background: rgba(0, 0, 0, 0.6); }
+      .player.expanded {
+        z-index: 50;
+        max-height: 94vh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        border-top: 1px solid var(--line-strong);
+        border-radius: 18px 18px 0 0;
+        background: rgba(12, 12, 12, 0.985);
+        animation: sheet-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .player.expanded .np-handle { top: 4px; }
+      .player.expanded .player-inner { flex-direction: column; align-items: stretch; gap: 18px; padding: 34px 24px 24px; }
+      .player.expanded .np-close {
+        display: flex;
+        position: absolute;
+        top: 14px; right: 14px;
+        z-index: 2;
+        width: 36px; height: 36px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid var(--line-strong);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .player.expanded .np-art { order: 0; width: min(74vw, 340px); align-self: center; }
+      .player.expanded .np-art .cover { border-radius: 4px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--line); }
+      .player.expanded .np-text { order: 1; flex: none; text-align: center; }
+      .player.expanded .np-title { font-size: 1.7rem; white-space: normal; }
+      .player.expanded .np-album { font-size: 1.1rem; white-space: normal; }
+      .player.expanded .np-progress { order: 2; display: flex; gap: 12px; }
+      .player.expanded .np-dur::before { content: none; }
+      .player.expanded .seek { position: static; flex: 1; height: 24px; }
+      .player.expanded .seek::-webkit-slider-thumb { opacity: 1; }
+      .player.expanded .seek::-moz-range-thumb { opacity: 1; }
+      .player.expanded .np-buttons { order: 3; justify-content: center; gap: 28px; }
+      .player.expanded .np-prev { display: inline-flex; }
+      .player.expanded .np-btn { width: 52px; height: 52px; }
+      .player.expanded .np-btn svg { width: 24px; height: 24px; }
+      .player.expanded .np-play { width: 70px; height: 70px; }
+      .player.expanded .np-sleep { order: 4; display: flex; position: static; width: auto; padding: 0; background: none; border: 0; box-shadow: none; }
+      .player.expanded .np-sleep-options button { min-height: 44px; }
+      .player.expanded .np-actions { order: 5; display: flex; gap: 10px; }
+      .player.expanded .np-action { flex: 1; width: auto; height: 46px; padding: 0 8px; }
+      .player.expanded .np-action .label { display: inline; }
+      .player.expanded #np-sleep-btn { display: none; }
+      .player.expanded .np-upnext:not([hidden]) {
+        order: 6;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 4px -24px -24px;
+        padding: 14px 24px calc(16px + env(safe-area-inset-bottom));
+        border-top: 1px solid var(--line);
+        background: #141414;
+        text-align: left;
+      }
+      .np-upnext-thumb { width: 42px; flex-shrink: 0; }
+      .np-upnext-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+      .np-upnext-title { font-size: 1.1rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .np-upnext-chevron { flex-shrink: 0; width: 9px; height: 9px; margin: 4px 6px 0; border-left: 1.5px solid var(--text); border-top: 1.5px solid var(--text); transform: rotate(45deg); }
+
+      /* The queue: its own sheet over the full player. */
+      .queue-panel {
+        top: 36px;
+        left: 0; right: 0;
+        bottom: 0 !important;
+        width: auto;
+        max-height: none;
+        padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
+        border: 0;
+        border-top: 1px solid var(--line-strong);
+        border-radius: 18px 18px 0 0;
+        background: #0e0e0e;
+        animation: sheet-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .qp-header { touch-action: none; padding-bottom: 4px; }
+      .qp-handle { display: block; width: 40px; height: 4px; margin: 0 auto 12px; border-radius: 2px; background: var(--muted); opacity: 0.5; }
+      .qp-now:not([hidden]) { display: flex; align-items: center; gap: 12px; padding: 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); }
+      .qp-now .qp-song { color: var(--white); font-style: italic; }
+      .qp-now-tag { flex-shrink: 0; padding-right: 6px; font-family: var(--sans); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.16em; color: var(--white); }
+      .qp-label { display: block; padding: 10px 6px 2px; }
+      .queue-panel .queue-list { flex: 1; }
+      .qp-mini { display: flex; align-items: center; gap: 8px; margin-top: auto; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+      .qp-mini-title { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     }
   </style>
 </head>
@@ -391,29 +656,115 @@
     </footer>
   </div>
 
+  <div class="np-backdrop" id="np-backdrop"></div>
+
   <div class="player" id="player" hidden>
-    <input type="range" class="seek" id="seek" min="0" max="1000" value="0" step="1" aria-label="Seek">
+    <div class="np-handle" id="np-handle" role="button" tabindex="0" aria-label="Open or close the full player"></div>
+    <button type="button" class="np-close" id="np-close" aria-label="Close the full player">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
     <div class="player-inner">
-      <div class="cover" id="np-cover"></div>
+      <div class="np-art" id="np-art"></div>
       <div class="np-text">
         <div class="np-title" id="np-title"></div>
         <div class="np-album" id="np-album"></div>
       </div>
-      <span class="np-time" id="np-time"></span>
+      <div class="np-progress">
+        <span class="np-cur" id="np-cur">0:00</span>
+        <input type="range" class="seek" id="seek" min="0" max="1000" value="0" step="1" aria-label="Seek">
+        <span class="np-dur" id="np-dur">0:00</span>
+      </div>
       <div class="np-buttons">
-        <button class="np-btn np-prev" id="np-prev" aria-label="Previous song">
+        <button type="button" class="np-btn np-prev" id="np-prev" aria-label="Previous song">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
         </button>
-        <button class="np-btn np-play" id="np-play" aria-label="Play">
+        <button type="button" class="np-btn np-play" id="np-play" aria-label="Play">
           <svg id="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>
           <svg id="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" hidden><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
         </button>
-        <button class="np-btn" id="np-next" aria-label="Next song">
+        <button type="button" class="np-btn" id="np-next" aria-label="Next song">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
         </button>
       </div>
+      <div class="np-actions">
+        <button type="button" class="np-action" id="np-sleep-btn" title="Sleep timer" aria-haspopup="true" aria-controls="np-sleep">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <span class="label" id="np-sleep-btn-label">Sleep</span>
+        </button>
+        <button type="button" class="np-action" id="np-queue-btn" title="Up next" aria-haspopup="true" aria-controls="queue-panel" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="15" y2="6"/><line x1="4" y1="12" x2="15" y2="12"/><line x1="4" y1="18" x2="11" y2="18"/><polyline points="17 15 20 18 17 21"/></svg>
+          <span class="label" id="np-queue-btn-label">Queue</span>
+        </button>
+        <button type="button" class="np-action" id="np-download" title="Download this song">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
+          <span class="label">Download</span>
+        </button>
+        <button type="button" class="np-action" id="np-share" title="Share this song">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span class="label" id="np-share-label">Share</span>
+        </button>
+      </div>
+      <div class="np-sleep" id="np-sleep" role="group" aria-label="Sleep timer">
+        <span class="np-sleep-label">Stop after</span>
+        <div class="np-sleep-options">
+          <button type="button" data-sleep="off" aria-pressed="true">Off</button>
+          <button type="button" data-sleep="15" aria-pressed="false">15m</button>
+          <button type="button" data-sleep="30" aria-pressed="false">30m</button>
+          <button type="button" data-sleep="60" aria-pressed="false">1h</button>
+          <button type="button" data-sleep="end" aria-pressed="false">Song end</button>
+        </div>
+        <span class="np-sleep-status" id="np-sleep-status" hidden></span>
+      </div>
+      <button type="button" class="np-upnext" id="np-upnext" hidden>
+        <span class="np-upnext-text">
+          <span class="np-upnext-label" id="np-upnext-label">Up next</span>
+          <span class="np-upnext-title" id="np-upnext-title"></span>
+        </span>
+        <span class="np-upnext-chevron" aria-hidden="true"></span>
+      </button>
     </div>
   </div>
+
+  <section class="queue-panel" id="queue-panel" aria-label="Up next" hidden>
+    <div class="qp-header" id="qp-header">
+      <div class="qp-handle" aria-hidden="true"></div>
+      <div class="qp-title-row">
+        <div>
+          <h2 class="qp-title">Up next</h2>
+          <span class="qp-count" id="qp-count"></span>
+        </div>
+        <div class="qp-header-actions">
+          <button type="button" class="qp-clear" id="qp-clear" hidden>Clear</button>
+          <button type="button" class="qp-close" id="qp-close" aria-label="Close the queue">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="qp-now" id="qp-now" hidden>
+      <span class="qp-text">
+        <span class="qp-song" id="qp-now-title"></span>
+        <span class="qp-album" id="qp-now-album"></span>
+      </span>
+      <span class="qp-now-tag">PLAYING</span>
+    </div>
+    <div class="qp-label" id="qp-next-label" hidden>Next</div>
+    <ul class="queue-list" id="queue-list"></ul>
+    <p class="qp-empty" id="qp-empty">Nothing queued yet. Tap + on any song to add it here.</p>
+    <div class="qp-mini">
+      <span class="qp-mini-title" id="qp-mini-title"></span>
+      <button type="button" class="np-btn" id="qp-prev" aria-label="Previous song">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
+      </button>
+      <button type="button" class="np-btn np-play" id="qp-play" aria-label="Play or pause">
+        <svg class="qp-icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>
+        <svg class="qp-icon-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" hidden><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+      </button>
+      <button type="button" class="np-btn" id="qp-next" aria-label="Next song">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
+      </button>
+    </div>
+  </section>
   <audio id="audio" preload="none"></audio>
 
   <script>
@@ -426,8 +777,10 @@
 
     const audio = document.getElementById('audio');
     const allTracks = [];   // every song, in page order (newest album first)
-    let playlist = [];      // what Next and Previous walk through
-    let pos = -1;           // index of the playing song in playlist
+    let playlist = [];      // the list Next and Previous walk through
+    let pos = -1;           // where we are in playlist
+    let current = null;     // the song in the player (from playlist or the queue)
+    let queue = [];         // songs added with +, played before the playlist continues
 
     const mediaUrl = (path) => `${MEDIA_BASE}/${path.split('/').map(encodeURIComponent).join('/')}`;
     const slugify = (text) => text.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -561,17 +914,24 @@
 
       const list = el('ol', 'tracks');
       const albumTracks = [];
+      const usedTrackSlugs = new Set();
       tracks.forEach((t, i) => {
+        const title = (t.title || '').trim() || `Track ${i + 1}`;
+        let trackSlug = `${slug}-${slugify(title) || i + 1}`;
+        while (usedTrackSlugs.has(trackSlug)) trackSlug += '-2';
+        usedTrackSlugs.add(trackSlug);
         const track = {
-          title: (t.title || '').trim() || `Track ${i + 1}`,
+          title,
           album: name,
           url: mediaUrl(t.path),
           fileName: t.path.split('/').pop(),
+          id: `track-${trackSlug}`,
           thumb,
           big,
           row: null
         };
         const li = el('li', 'track');
+        li.id = track.id;
         const play = el('button', 'track-play');
         play.type = 'button';
         play.append(el('span', 'track-num', String(i + 1)), el('span', 'track-title', track.title));
@@ -584,8 +944,14 @@
         dl.setAttribute('aria-label', `Download ${track.title}`);
         dl.innerHTML = ICON_DOWNLOAD;
         dl.addEventListener('click', (e) => downloadFile(e, track.url, track.fileName));
-        li.append(play, dl);
+        const add = el('button', 'track-queue', '+');
+        add.type = 'button';
+        add.title = 'Add to queue';
+        add.addEventListener('click', () => toggleQueue(track));
+        li.append(play, add, dl);
         track.row = li;
+        track.queueBtn = add;
+        setQueueButton(track, false);
         list.append(li);
         albumTracks.push(track);
         allTracks.push(track);
@@ -633,26 +999,43 @@
     }
 
     // ---------- Playback ----------
-    function playFrom(list, index) {
-      if (!list.length || index < 0 || index >= list.length) return;
-      playlist = list;
-      pos = index;
-      const track = playlist[pos];
+    // Tapping a song plays it and then carries on through the page (or the
+    // shuffled album). Songs added to the queue play next, before the page
+    // order continues.
+    function startTrack(track, autoplay = true) {
+      current = track;
+      removeFromQueue(track);
       audio.src = track.url;
-      audio.play().catch(() => {});
+      if (autoplay) audio.play().catch(() => {});
       showNowPlaying(track);
     }
 
-    function step(dir) {
-      if (pos < 0) return;
+    function playFrom(list, index, autoplay = true) {
+      if (!list.length || index < 0 || index >= list.length) return;
+      playlist = list;
+      pos = index;
+      startTrack(list[index], autoplay);
+    }
+
+    const hasNext = () => queue.length > 0 || pos + 1 < playlist.length;
+
+    function playNext() {
+      if (queue.length) { startTrack(queue[0]); return; }
+      if (pos + 1 < playlist.length) playFrom(playlist, pos + 1);
+    }
+
+    function playPrev() {
+      if (!current) return;
       // Previous restarts the song if it's more than a few seconds in.
-      if (dir < 0 && audio.currentTime > 3) { audio.currentTime = 0; return; }
-      const next = pos + dir;
-      if (next >= 0 && next < playlist.length) playFrom(playlist, next);
+      if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+      // After a queued song, Previous goes back to where the page order was.
+      if (current !== playlist[pos] && pos >= 0) { playFrom(playlist, pos); return; }
+      if (pos > 0) playFrom(playlist, pos - 1);
+      else audio.currentTime = 0;
     }
 
     function togglePlay() {
-      if (pos < 0) {
+      if (!current) {
         if (allTracks.length) playFrom(allTracks, 0);
         return;
       }
@@ -663,11 +1046,11 @@
       document.getElementById('player').hidden = false;
       document.getElementById('np-title').textContent = track.title;
       document.getElementById('np-album').textContent = track.album;
-      const cover = document.getElementById('np-cover');
-      cover.replaceWith(Object.assign(coverTile(track.thumb, track.album), { id: 'np-cover' }));
+      document.getElementById('np-art').replaceChildren(coverTile(track.big || track.thumb, track.album));
       document.querySelectorAll('.track.playing').forEach((row) => row.classList.remove('playing'));
       track.row.classList.add('playing');
       document.title = `${track.title} · ${ARTIST}`;
+      updateQueueNowPlaying();
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
           title: track.title,
@@ -682,6 +1065,8 @@
       document.getElementById('icon-play').hidden = playing;
       document.getElementById('icon-pause').hidden = !playing;
       document.getElementById('np-play').setAttribute('aria-label', playing ? 'Pause' : 'Play');
+      document.querySelector('.qp-icon-play').hidden = playing;
+      document.querySelector('.qp-icon-pause').hidden = !playing;
     }
 
     const seek = document.getElementById('seek');
@@ -691,7 +1076,8 @@
       const pct = dur > 0 ? (audio.currentTime / dur) * 100 : 0;
       if (!seeking) seek.value = Math.round(pct * 10);
       seek.style.setProperty('--pct', `${seeking ? seek.value / 10 : pct}%`);
-      document.getElementById('np-time').textContent = `${formatTime(audio.currentTime)} / ${formatTime(dur)}`;
+      document.getElementById('np-cur').textContent = formatTime(audio.currentTime);
+      document.getElementById('np-dur').textContent = formatTime(dur);
     }
     seek.addEventListener('input', () => {
       seeking = true;
@@ -707,25 +1093,486 @@
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('loadedmetadata', updateProgress);
     audio.addEventListener('ended', () => {
-      if (pos + 1 < playlist.length) step(1);
+      if (sleepTimer.mode === 'end' || sleepTimer.fading) {
+        setSleepTimer('off');
+        setPlayIcon(false);
+        return;
+      }
+      if (hasNext()) playNext();
       else setPlayIcon(false);
     });
     document.getElementById('np-play').addEventListener('click', togglePlay);
-    document.getElementById('np-next').addEventListener('click', () => step(1));
-    document.getElementById('np-prev').addEventListener('click', () => step(-1));
+    document.getElementById('np-next').addEventListener('click', playNext);
+    document.getElementById('np-prev').addEventListener('click', playPrev);
+    document.getElementById('qp-play').addEventListener('click', togglePlay);
+    document.getElementById('qp-next').addEventListener('click', playNext);
+    document.getElementById('qp-prev').addEventListener('click', playPrev);
 
     if ('mediaSession' in navigator) {
       const handlers = {
         play: () => audio.play().catch(() => {}),
         pause: () => audio.pause(),
-        previoustrack: () => step(-1),
-        nexttrack: () => step(1),
+        previoustrack: playPrev,
+        nexttrack: playNext,
         seekto: (d) => { if (d.seekTime != null) audio.currentTime = d.seekTime; }
       };
       for (const [action, fn] of Object.entries(handlers)) {
         try { navigator.mediaSession.setActionHandler(action, fn); } catch (e) { /* not supported here */ }
       }
     }
+
+    // ---------- Queue ----------
+    function setQueueButton(track, queued) {
+      const btn = track.queueBtn;
+      if (!btn) return;
+      btn.textContent = queued ? '✓' : '+';
+      btn.classList.toggle('queued', queued);
+      btn.setAttribute('aria-pressed', String(queued));
+      btn.setAttribute('aria-label', `${queued ? 'Remove' : 'Add'} ${track.title} ${queued ? 'from' : 'to'} the queue`);
+    }
+
+    function toggleQueue(track) {
+      const i = queue.indexOf(track);
+      if (i === -1) queue.push(track); else queue.splice(i, 1);
+      setQueueButton(track, i === -1);
+      renderQueue();
+    }
+
+    function removeFromQueue(track) {
+      const i = queue.indexOf(track);
+      if (i === -1) return;
+      queue.splice(i, 1);
+      setQueueButton(track, false);
+      renderQueue();
+    }
+
+    function clearQueue() {
+      queue.forEach((track) => setQueueButton(track, false));
+      queue = [];
+      renderQueue();
+    }
+
+    function moveQueueItem(from, to) {
+      if (from === to || to < 0 || to >= queue.length) return;
+      const [track] = queue.splice(from, 1);
+      queue.splice(to, 0, track);
+      renderQueue();
+    }
+
+    // Play a queued song now. Songs queued ahead of it are skipped, so the
+    // queue carries on from there.
+    function playFromQueue(track) {
+      const i = queue.indexOf(track);
+      if (i === -1) return;
+      queue.slice(0, i).forEach((skipped) => removeFromQueue(skipped));
+      startTrack(track);
+    }
+
+    function renderQueue() {
+      const n = queue.length;
+      const countText = `${n} ${n === 1 ? 'song' : 'songs'}`;
+      document.getElementById('qp-count').textContent = n ? countText : '';
+      document.getElementById('qp-clear').hidden = n === 0;
+      document.getElementById('qp-empty').hidden = n > 0;
+      document.getElementById('qp-next-label').hidden = n === 0;
+      document.getElementById('np-queue-btn-label').textContent = n ? `Queue ${n}` : 'Queue';
+
+      // Phone player: the next queued song peeks at the bottom.
+      const peek = document.getElementById('np-upnext');
+      peek.hidden = n === 0;
+      if (n) {
+        document.getElementById('np-upnext-label').textContent = `Up next · ${countText}`;
+        document.getElementById('np-upnext-title').textContent = queue[0].title;
+        const old = peek.querySelector('.cover');
+        if (old) old.remove();
+        const thumb = coverTile(queue[0].thumb, queue[0].album);
+        thumb.classList.add('np-upnext-thumb');
+        peek.prepend(thumb);
+      }
+
+      document.getElementById('queue-list').replaceChildren(...queue.map((track) => {
+        const li = el('li');
+        const grip = el('button', 'queue-grip');
+        grip.type = 'button';
+        grip.title = 'Drag to reorder';
+        grip.setAttribute('aria-label', `Move ${track.title}. Drag, or use the up and down arrow keys.`);
+        grip.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>';
+
+        // Tapping the song plays it; the queue then carries on from there.
+        const play = el('button', 'qp-play');
+        play.type = 'button';
+        play.setAttribute('aria-label', `Play ${track.title} now`);
+        const text = el('span', 'qp-text');
+        text.append(el('span', 'qp-song', track.title), el('span', 'qp-album', track.album));
+        const thumb = coverTile(track.thumb, track.album);
+        thumb.classList.add('qp-thumb');
+        play.append(thumb, text);
+        play.addEventListener('click', () => playFromQueue(track));
+
+        const remove = el('button', 'queue-remove', '×');
+        remove.type = 'button';
+        remove.title = 'Remove from queue';
+        remove.setAttribute('aria-label', `Remove ${track.title} from the queue`);
+        remove.addEventListener('click', () => removeFromQueue(track));
+
+        li.append(grip, play, remove);
+        return li;
+      }));
+    }
+
+    // The song playing now, at the top of the phone queue sheet and in its
+    // mini player.
+    function updateQueueNowPlaying() {
+      const now = document.getElementById('qp-now');
+      now.hidden = !current;
+      if (!current) return;
+      document.getElementById('qp-now-title').textContent = current.title;
+      document.getElementById('qp-now-album').textContent = current.album;
+      document.getElementById('qp-mini-title').textContent = current.title;
+      const old = now.querySelector('.cover');
+      if (old) old.remove();
+      const thumb = coverTile(current.thumb, current.album);
+      thumb.classList.add('qp-thumb');
+      now.prepend(thumb);
+    }
+
+    // Drag a queued song by its handle to reorder it. Pointer events cover
+    // mouse and touch alike; the handle also takes the up and down arrow keys.
+    function setupQueueDrag() {
+      const list = document.getElementById('queue-list');
+      let drag = null;
+
+      list.addEventListener('pointerdown', (e) => {
+        const grip = e.target.closest('.queue-grip');
+        if (!grip || (e.pointerType === 'mouse' && e.button !== 0)) return;
+        e.preventDefault();
+        const items = [...list.children];
+        const li = grip.closest('li');
+        const from = items.indexOf(li);
+        const stepPx = items.length > 1 ? items[1].offsetTop - items[0].offsetTop : li.offsetHeight;
+        drag = { pointerId: e.pointerId, li, items, from, to: from, stepPx, startY: e.clientY, startScroll: list.scrollTop };
+        grip.setPointerCapture(e.pointerId);
+        list.classList.add('reordering');
+        li.classList.add('dragging');
+      });
+
+      list.addEventListener('pointermove', (e) => {
+        if (!drag || e.pointerId !== drag.pointerId) return;
+        // Scroll a long queue when the song is dragged to its top or bottom edge.
+        const box = list.getBoundingClientRect();
+        if (e.clientY < box.top + 16) list.scrollTop -= 6;
+        else if (e.clientY > box.bottom - 16) list.scrollTop += 6;
+        const dy = e.clientY - drag.startY + (list.scrollTop - drag.startScroll);
+        drag.li.style.transform = `translateY(${dy}px)`;
+        const to = Math.max(0, Math.min(drag.items.length - 1, Math.round(drag.from + dy / drag.stepPx)));
+        if (to === drag.to) return;
+        drag.to = to;
+        drag.items.forEach((item, i) => {
+          if (item === drag.li) return;
+          let shift = 0;
+          if (drag.from < to && i > drag.from && i <= to) shift = -drag.stepPx;
+          if (drag.from > to && i >= to && i < drag.from) shift = drag.stepPx;
+          item.style.transform = shift ? `translateY(${shift}px)` : '';
+        });
+      });
+
+      const endDrag = (e) => {
+        if (!drag || e.pointerId !== drag.pointerId) return;
+        const { li, from, to } = drag;
+        drag = null;
+        list.classList.remove('reordering');
+        // If a song ended mid-drag the list was redrawn, so skip the move.
+        if (li.isConnected && from !== to) moveQueueItem(from, to);
+        else renderQueue();
+      };
+      list.addEventListener('pointerup', endDrag);
+      list.addEventListener('pointercancel', endDrag);
+
+      list.addEventListener('keydown', (e) => {
+        const grip = e.target.closest('.queue-grip');
+        if (!grip || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+        e.preventDefault();
+        const from = [...list.children].indexOf(grip.closest('li'));
+        const to = from + (e.key === 'ArrowUp' ? -1 : 1);
+        if (to < 0 || to >= queue.length) return;
+        moveQueueItem(from, to);
+        list.children[to].querySelector('.queue-grip').focus();
+      });
+    }
+
+    // ---------- Queue panel, full player, sleep timer ----------
+    const SHEET_CLOSE_MS = 220;
+    const isPhoneLayout = () => window.matchMedia('(max-width: 760px)').matches;
+    const playerEl = document.getElementById('player');
+    const backdrop = document.getElementById('np-backdrop');
+    const queuePanel = document.getElementById('queue-panel');
+
+    function openQueuePanel() {
+      document.getElementById('np-sleep').classList.remove('open');
+      queuePanel.style.transition = '';
+      queuePanel.style.transform = '';
+      // Desktop: sit just above the player bar, whatever its height.
+      queuePanel.style.bottom = isPhoneLayout() ? '' : `${playerEl.offsetHeight + 10}px`;
+      queuePanel.hidden = false;
+      document.getElementById('np-queue-btn').classList.add('active');
+      document.getElementById('np-queue-btn').setAttribute('aria-expanded', 'true');
+    }
+
+    // On phones the sheet slides down before it's hidden.
+    function closeQueuePanel() {
+      if (queuePanel.hidden) return;
+      document.getElementById('np-queue-btn').classList.remove('active');
+      document.getElementById('np-queue-btn').setAttribute('aria-expanded', 'false');
+      const finish = () => {
+        queuePanel.hidden = true;
+        queuePanel.style.transition = '';
+        queuePanel.style.transform = '';
+      };
+      if (!isPhoneLayout()) { finish(); return; }
+      queuePanel.style.transition = `transform ${SHEET_CLOSE_MS}ms ease-in`;
+      queuePanel.style.transform = 'translateY(100%)';
+      setTimeout(finish, SHEET_CLOSE_MS);
+    }
+
+    function toggleQueuePanel() {
+      if (queuePanel.hidden) openQueuePanel(); else closeQueuePanel();
+    }
+
+    function openExpandedPlayer() {
+      playerEl.classList.add('expanded');
+      backdrop.classList.add('active');
+    }
+
+    function closeExpandedPlayer() {
+      if (!playerEl.classList.contains('expanded')) return;
+      closeQueuePanel();
+      const finish = () => {
+        playerEl.classList.remove('expanded');
+        backdrop.classList.remove('active');
+        playerEl.style.transition = '';
+        playerEl.style.transform = '';
+        backdrop.style.transition = '';
+        backdrop.style.opacity = '';
+      };
+      if (!isPhoneLayout()) { finish(); return; }
+      playerEl.style.transition = `transform ${SHEET_CLOSE_MS}ms ease-in`;
+      playerEl.style.transform = 'translateY(100%)';
+      backdrop.style.transition = `opacity ${SHEET_CLOSE_MS}ms`;
+      backdrop.style.opacity = '0';
+      setTimeout(finish, SHEET_CLOSE_MS);
+    }
+
+    function toggleExpandedPlayer() {
+      if (playerEl.classList.contains('expanded')) closeExpandedPlayer(); else openExpandedPlayer();
+    }
+
+    // Phone player: swipe up (or tap the bar) to open, drag down to close.
+    function setupSheetGestures() {
+      let drag = null;
+      playerEl.addEventListener('touchstart', (e) => {
+        if (!isPhoneLayout() || e.touches.length !== 1) return;
+        const touch = e.touches[0];
+        drag = {
+          startX: touch.clientX,
+          startY: touch.clientY,
+          startTime: Date.now(),
+          expanded: playerEl.classList.contains('expanded'),
+          atTop: playerEl.scrollTop <= 0,
+          onUpNext: !!e.target.closest('#np-upnext'),
+          // The seek bar and the sleep buttons have gestures of their own.
+          ownGesture: !!e.target.closest('.seek'),
+          active: false,
+          dy: 0
+        };
+      }, { passive: true });
+
+      playerEl.addEventListener('touchmove', (e) => {
+        if (!drag || drag.ownGesture) return;
+        const touch = e.touches[0];
+        const dx = touch.clientX - drag.startX;
+        const dy = touch.clientY - drag.startY;
+        if (!drag.active) {
+          if (Math.abs(dy) < 8 || Math.abs(dy) < Math.abs(dx)) return;
+          if (!drag.expanded && dy < 0) { drag = null; openExpandedPlayer(); return; }
+          // Swiping up on the Up next strip pulls up the queue.
+          if (drag.expanded && dy < 0 && drag.onUpNext) { drag = null; openQueuePanel(); return; }
+          // Only pull the sheet down when it's scrolled to the top.
+          if (!drag.expanded || dy < 0 || !drag.atTop) { drag = null; return; }
+          drag.active = true;
+          playerEl.style.transition = 'none';
+        }
+        e.preventDefault();
+        drag.dy = Math.max(0, dy);
+        playerEl.style.transform = `translateY(${drag.dy}px)`;
+        backdrop.style.opacity = String(Math.max(0, 1 - drag.dy / playerEl.offsetHeight));
+      }, { passive: false });
+
+      const endDrag = () => {
+        if (drag && drag.active) {
+          const speed = drag.dy / Math.max(1, Date.now() - drag.startTime);
+          if (drag.dy > playerEl.offsetHeight * 0.25 || speed > 0.6) {
+            closeExpandedPlayer();
+          } else {
+            playerEl.style.transition = 'transform 0.2s ease-out';
+            playerEl.style.transform = '';
+            backdrop.style.opacity = '';
+          }
+        }
+        drag = null;
+      };
+      playerEl.addEventListener('touchend', endDrag);
+      playerEl.addEventListener('touchcancel', endDrag);
+
+      playerEl.addEventListener('click', (e) => {
+        if (!isPhoneLayout() || playerEl.classList.contains('expanded')) return;
+        if (e.target.closest('button, a, .seek')) return;
+        openExpandedPlayer();
+      });
+
+      // Keep the page behind the open sheet from scrolling.
+      backdrop.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+      backdrop.addEventListener('click', closeExpandedPlayer);
+    }
+
+    // Phone queue sheet: drag its header down to close it.
+    function setupQueueSheetGestures() {
+      const header = document.getElementById('qp-header');
+      let drag = null;
+      header.addEventListener('touchstart', (e) => {
+        if (!isPhoneLayout() || e.touches.length !== 1 || e.target.closest('button')) return;
+        drag = { startY: e.touches[0].clientY, startTime: Date.now(), dy: 0 };
+        queuePanel.style.transition = 'none';
+      }, { passive: true });
+      header.addEventListener('touchmove', (e) => {
+        if (!drag) return;
+        e.preventDefault();
+        drag.dy = Math.max(0, e.touches[0].clientY - drag.startY);
+        queuePanel.style.transform = `translateY(${drag.dy}px)`;
+      }, { passive: false });
+      const end = () => {
+        if (!drag) return;
+        const speed = drag.dy / Math.max(1, Date.now() - drag.startTime);
+        if (drag.dy > queuePanel.offsetHeight * 0.25 || speed > 0.6) {
+          closeQueuePanel();
+        } else {
+          queuePanel.style.transition = 'transform 0.2s ease-out';
+          queuePanel.style.transform = '';
+        }
+        drag = null;
+      };
+      header.addEventListener('touchend', end);
+      header.addEventListener('touchcancel', end);
+      header.addEventListener('click', (e) => {
+        if (isPhoneLayout() && !e.target.closest('button')) closeQueuePanel();
+      });
+    }
+
+    // Sleep timer: 'off', 'end' (stop when this song ends) or minutes.
+    const SLEEP_FADE_MS = 8000;
+    let sleepTimer = { mode: 'off', endsAt: 0, fading: false };
+    let sleepTick = null;
+
+    function setSleepTimer(mode) {
+      clearInterval(sleepTick);
+      sleepTick = null;
+      const minutes = Number(mode);
+      sleepTimer = { mode, endsAt: minutes ? Date.now() + minutes * 60000 : 0, fading: false };
+      if (sleepTimer.endsAt) sleepTick = setInterval(checkSleepTimer, 1000);
+      document.getElementById('np-sleep').classList.remove('open');
+      renderSleepTimer();
+    }
+
+    function checkSleepTimer() {
+      if (!sleepTimer.endsAt) return;
+      if (!sleepTimer.fading && sleepTimer.endsAt - Date.now() <= SLEEP_FADE_MS) {
+        sleepTimer.fading = true;
+        fadeOutAndPause(sleepTimer.endsAt - Date.now(), () => setSleepTimer('off'));
+      }
+      renderSleepTimer();
+    }
+
+    // iOS ignores audio.volume, so there the music simply pauses on time.
+    function fadeOutAndPause(durationMs, done) {
+      if (audio.paused) { done(); return; }
+      const startVolume = audio.volume;
+      const steps = 40;
+      let n = 0;
+      const fade = setInterval(() => {
+        n++;
+        audio.volume = Math.max(0, startVolume * (1 - n / steps));
+        if (n >= steps) {
+          clearInterval(fade);
+          audio.pause();
+          audio.volume = startVolume;
+          done();
+        }
+      }, Math.max(25, durationMs / steps));
+    }
+
+    function renderSleepTimer() {
+      document.querySelectorAll('#np-sleep [data-sleep]').forEach((btn) => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.sleep === sleepTimer.mode));
+      });
+      let status = '';
+      let buttonLabel = 'Sleep';
+      if (sleepTimer.mode === 'end') {
+        status = 'Stops after this song.';
+        buttonLabel = 'Sleep: song end';
+      } else if (sleepTimer.endsAt) {
+        const remaining = Math.max(0, sleepTimer.endsAt - Date.now());
+        const clock = new Date(sleepTimer.endsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        status = sleepTimer.fading ? 'Fading out…' : `Music fades out at ${clock}.`;
+        buttonLabel = `Sleep ${formatTime(remaining / 1000)}`;
+      }
+      const statusEl = document.getElementById('np-sleep-status');
+      statusEl.textContent = status;
+      statusEl.hidden = !status;
+      document.getElementById('np-sleep-btn-label').textContent = buttonLabel;
+      document.getElementById('np-sleep-btn').classList.toggle('active', sleepTimer.mode !== 'off');
+    }
+
+    document.querySelectorAll('#np-sleep [data-sleep]').forEach((btn) => {
+      btn.addEventListener('click', () => setSleepTimer(btn.dataset.sleep));
+    });
+    document.getElementById('np-sleep-btn').addEventListener('click', () => {
+      closeQueuePanel();
+      document.getElementById('np-sleep').classList.toggle('open');
+    });
+    document.getElementById('np-queue-btn').addEventListener('click', toggleQueuePanel);
+    document.getElementById('np-upnext').addEventListener('click', openQueuePanel);
+    document.getElementById('qp-close').addEventListener('click', closeQueuePanel);
+    document.getElementById('qp-clear').addEventListener('click', clearQueue);
+    document.getElementById('np-close').addEventListener('click', closeExpandedPlayer);
+    const handle = document.getElementById('np-handle');
+    handle.addEventListener('click', toggleExpandedPlayer);
+    handle.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandedPlayer(); }
+    });
+    document.getElementById('np-download').addEventListener('click', (e) => {
+      if (current) downloadFile(e, current.url, current.fileName);
+    });
+    document.getElementById('np-share').addEventListener('click', () => {
+      if (current) shareLink(`#${current.id}`, `${current.title} · ${ARTIST}`, document.getElementById('np-share-label'), 'Share');
+    });
+
+    // Clicking elsewhere closes the desktop popovers, except a song's +
+    // button, so songs can be added with the queue open.
+    document.addEventListener('click', (e) => {
+      const sleepMenu = document.getElementById('np-sleep');
+      if (sleepMenu.classList.contains('open') && !e.target.closest('#np-sleep, #np-sleep-btn')) {
+        sleepMenu.classList.remove('open');
+      }
+      if (queuePanel.hidden || isPhoneLayout()) return;
+      if (e.composedPath().includes(queuePanel)) return;
+      if (e.target.closest('#np-queue-btn, #np-upnext, .track-queue')) return;
+      closeQueuePanel();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (!queuePanel.hidden) closeQueuePanel();
+      else if (document.getElementById('np-sleep').classList.contains('open')) document.getElementById('np-sleep').classList.remove('open');
+      else closeExpandedPlayer();
+    });
 
     // ---------- Downloads and sharing ----------
     // Browsers ignore the download attribute for files on another site, so
@@ -748,30 +1595,49 @@
       }
     }
 
-    async function shareAlbum(slug, name, button) {
-      const url = `${location.origin}${location.pathname}#album-${slug}`;
+    // Share a link to an album (#album-…) or a song (#track-…). Phones get
+    // the share sheet; elsewhere the link is copied.
+    async function shareLink(hash, title, labelEl, label) {
+      const url = `${location.origin}${location.pathname}${hash}`;
       if (navigator.share) {
-        try { await navigator.share({ title: `${name} · ${ARTIST}`, url }); } catch (e) { /* cancelled */ }
+        try { await navigator.share({ title, url }); } catch (e) { /* cancelled */ }
         return;
       }
       try {
         await navigator.clipboard.writeText(url);
-        button.textContent = 'Link copied';
+        labelEl.textContent = 'Link copied';
       } catch (e) {
-        button.textContent = 'Copy failed';
+        labelEl.textContent = 'Copy failed';
       }
-      setTimeout(() => { button.textContent = 'Share'; }, 2000);
+      setTimeout(() => { labelEl.textContent = label; }, 2000);
     }
 
-    // A shared link (#album-name) scrolls to that album.
+    function shareAlbum(slug, name, button) {
+      shareLink(`#album-${slug}`, `${name} · ${ARTIST}`, button, 'Share');
+    }
+
+    // A shared link scrolls to its album, or to its song, which is then
+    // ready in the player (browsers won't start music before a tap).
     function scrollToHash() {
       const id = decodeURIComponent(location.hash.slice(1));
-      if (!id.startsWith('album-')) return;
-      const target = document.getElementById(id);
-      if (target) target.scrollIntoView({ block: 'start' });
+      const target = id && document.getElementById(id);
+      if (!target) return;
+      if (id.startsWith('album-')) {
+        target.scrollIntoView({ block: 'start' });
+      } else if (id.startsWith('track-')) {
+        target.scrollIntoView({ block: 'center' });
+        target.classList.add('flash');
+        setTimeout(() => target.classList.remove('flash'), 2500);
+        const track = allTracks.find((t) => t.id === id);
+        if (track && track !== current) playFrom(allTracks, allTracks.indexOf(track), false);
+      }
     }
     window.addEventListener('hashchange', scrollToHash);
 
+    setupQueueDrag();
+    setupSheetGestures();
+    setupQueueSheetGestures();
+    renderQueue();
     loadAlbums();
 
     // Installable app: the service worker keeps the page itself available offline.
