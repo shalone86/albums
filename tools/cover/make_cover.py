@@ -20,6 +20,7 @@ and credits.txt into OUT_FOLDER.
 Optional per-album tweaks (leave them off to keep the series look):
   --light-leak 0.4   light leak strength for this album (series default below)
   --hue -12          shift the painting's colours by this many degrees
+  --center           logo and "human-made" centred instead of in the corners
 """
 import argparse
 import datetime
@@ -35,6 +36,7 @@ SIZE = 3000                       # main cover, square px
 SITE_SIZE = 800                   # site copy, square px
 LOGO_PATH = HERE / "logo-white.png"
 LOGO_WIDTH = 0.18                 # logo width as a fraction of cover width
+CENTER_LOGO_WIDTH = 0.28          # logo width when --center is used
 MARGIN = 0.05                     # gap from the edges, fraction of cover width
 TEXT = "human-made"
 FONT_PATH = HERE / "Caladea-Regular.ttf"   # SIL Open Font License
@@ -219,7 +221,7 @@ def draw_border(marks):
             d.ellipse((x - r, y - r, x + r, y + r), fill=col)
 
 
-def add_marks(im):
+def add_marks(im, center=False):
     if BORDER == "card":
         im = make_card(im)
     im = im.convert("RGBA")
@@ -230,16 +232,25 @@ def add_marks(im):
     draw_border(marks)
 
     logo = Image.open(LOGO_PATH).convert("RGBA")
-    lw = int(SIZE * LOGO_WIDTH)
+    lw = int(SIZE * (CENTER_LOGO_WIDTH if center else LOGO_WIDTH))
     logo = logo.resize((lw, int(logo.height * lw / logo.width)), Image.LANCZOS)
     alpha = logo.getchannel("A").point(lambda v: int(v * LOGO_OPACITY))
     logo = Image.new("RGBA", logo.size, MARK_COLOR + (0,))
     logo.putalpha(alpha)
-    marks.alpha_composite(logo, (margin, margin))
-
     font = ImageFont.truetype(str(FONT_PATH), int(SIZE * TEXT_SIZE))
-    ImageDraw.Draw(marks).text((SIZE - margin, SIZE - margin), TEXT, font=font, anchor="rd",
-                               fill=MARK_COLOR + (int(255 * TEXT_OPACITY),))
+    text_fill = MARK_COLOR + (int(255 * TEXT_OPACITY),)
+    if center:
+        # Logo and text as one block in the middle, text just below the logo.
+        gap = int(SIZE * 0.02)
+        text_h = font.getbbox(TEXT, anchor="mt")[3]
+        top = (SIZE - (logo.height + gap + text_h)) // 2
+        marks.alpha_composite(logo, ((SIZE - logo.width) // 2, top))
+        ImageDraw.Draw(marks).text((SIZE // 2, top + logo.height + gap), TEXT, font=font,
+                                   anchor="mt", fill=text_fill)
+    else:
+        marks.alpha_composite(logo, (margin, margin))
+        ImageDraw.Draw(marks).text((SIZE - margin, SIZE - margin), TEXT, font=font,
+                                   anchor="rd", fill=text_fill)
 
     if SHADOW:
         offset = int(SIZE * 0.003)
@@ -258,6 +269,7 @@ def main():
     p.add_argument("--crop", nargs=3, type=float, default=[0.5, 0.5, 1.0], metavar=("CX", "CY", "SIDE"))
     p.add_argument("--light-leak", type=float, default=LIGHT_LEAK)
     p.add_argument("--hue", type=float, default=0)
+    p.add_argument("--center", action="store_true")
     for field in ["title", "artist", "year", "museum", "url", "license"]:
         p.add_argument("--" + field, required=True)
     args = p.parse_args()
@@ -269,7 +281,7 @@ def main():
     painting = square_crop(load_srgb(args.painting), *args.crop)
     if args.hue:
         painting = shift_hue(painting, args.hue)
-    cover = grunge(add_marks(painting), args.light_leak)
+    cover = grunge(add_marks(painting, args.center), args.light_leak)
     cover.save(out / "cover.jpg", quality=JPEG_QUALITY, optimize=True)
     cover.resize((SITE_SIZE, SITE_SIZE), Image.LANCZOS).save(out / "cover-800.jpg", quality=JPEG_QUALITY, optimize=True)
 
