@@ -872,19 +872,22 @@
       scrollToHash();
     }
 
-    // Albums for the timeline strip, in page order (newest first).
+    // Albums for the timeline strip, in page order (newest first). Daily
+    // Beats, where it all started, closes it and links to its own site.
     const timelineAlbums = [];
+    const DAILY_BEATS = { href: 'https://shalonely.com', name: 'Daily Beats', when: 'Since Sep 2025', thumb: '/beats-cover.jpg' };
     function buildTimeline() {
-      if (timelineAlbums.length < 2) return;
+      const items = [...timelineAlbums, DAILY_BEATS];
+      if (items.length < 2) return;
       const track = document.getElementById('timeline-track');
-      timelineAlbums.forEach((a) => {
+      items.forEach((a) => {
         const li = el('li');
         const link = el('a', 'timeline-item');
-        link.href = `#album-${a.slug}`;
-        link.setAttribute('aria-label', [a.name, a.when].filter(Boolean).join(', '));
+        link.href = a.href || `#album-${a.slug}`;
+        link.setAttribute('aria-label', [a.name, a.when, a.href ? 'opens shalonely.com' : ''].filter(Boolean).join(', '));
         const cover = coverTile(a.thumb, a.name);
         link.append(cover, el('span', 'timeline-dot'));
-        if (a.when) link.append(el('span', 'timeline-month', a.when.replace(/^(\w{3})\w*/, '$1')));
+        if (a.when) link.append(el('span', 'timeline-month', a.href ? a.when : a.when.replace(/^(\w{3})\w*/, '$1')));
         link.append(el('span', 'timeline-title', a.name));
         li.append(link);
         track.append(li);
