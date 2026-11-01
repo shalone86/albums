@@ -17,6 +17,11 @@ export default {
     const parts = url.pathname.split('/').filter(Boolean).map(decodeURIComponent);
     try {
       if (url.pathname === '/sitemap.xml') return sitemap(await loadAlbums());
+      if (parts[0] === 'listen' && parts.length === 2) {
+        const out = sharePage(parts[1], await loadAlbums());
+        if (out) return html(out);
+        return Response.redirect(`${url.origin}/#${encodeURIComponent(parts[1])}`, 302);
+      }
       if (parts[0] === 'album' && parts.length === 2) {
         const album = (await loadAlbums()).find((a) => a.slug === parts[1]);
         if (album) return html(albumPage(album));
@@ -28,6 +33,8 @@ export default {
       }
     } catch (err) {
       console.error('Album pages:', err);
+      // A share link still gets people to the main page.
+      if (parts[0] === 'listen' && parts.length === 2) return Response.redirect(`${url.origin}/#${encodeURIComponent(parts[1])}`, 302);
       return html(notFoundPage('The albums couldn’t load right now. Please try again in a minute.'), 503);
     }
     // Anything else: the static files, or a friendly not-found page.
@@ -115,7 +122,7 @@ function sitemap(albums) {
   return new Response(body, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=300' } });
 }
 
-function page({ title, description, path, image, jsonLd, body, noindex = false }) {
+function page({ title, description, path, image, jsonLd, body, noindex = false, refresh = '' }) {
   const canonical = SITE + path;
   return `<!DOCTYPE html>
 <html lang="en">
@@ -125,6 +132,7 @@ function page({ title, description, path, image, jsonLd, body, noindex = false }
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(description)}">
   ${noindex ? '<meta name="robots" content="noindex">' : `<link rel="canonical" href="${esc(canonical)}">`}
+  ${refresh ? `<meta http-equiv="refresh" content="0; url=${esc(refresh)}">` : ''}
   <meta name="theme-color" content="#0a0a0a">
   <meta property="og:title" content="${esc(title)}">
   <meta property="og:description" content="${esc(description)}">
@@ -247,6 +255,25 @@ function songPage(album, song) {
       </div>
     </div>`;
   return page({ title: `${song.title} — ${ARTIST}`, description, path: songPath(album, song), image: album.cover, jsonLd, body });
+}
+
+// Share links: /listen/<id> shows the album's or song's own title and cover
+// to link previews (texts, social posts), then sends people straight on to
+// /#<id> on the main page, the same place the old share links went.
+// It isn't indexed by search; the real page is.
+function sharePage(id, albums) {
+  for (const a of albums) {
+    const found = id === `album-${a.slug}`
+      ? { title: `${a.name} — ${ARTIST}`, path: albumPath(a), description: `${a.name}, an album by ${ARTIST}. Free to hear, download and reuse.` }
+      : (() => { const s = a.songs.find((x) => id === `track-${a.slug}-${x.slug}`);
+          return s && { title: `${s.title} — ${ARTIST}`, path: songPath(a, s), description: `“${s.title}” by ${ARTIST}, from the album ${a.name}. Free to hear, download and reuse.` }; })();
+    if (found) {
+      const target = `/#${id}`;
+      return page({ ...found, image: a.cover, noindex: true, refresh: target,
+        body: `<h1>${esc(found.title)}</h1><p class="sub"><a href="${esc(target)}">Open the album site</a></p>` });
+    }
+  }
+  return null;
 }
 
 function notFoundPage(message) {

@@ -1630,7 +1630,8 @@
     // Share a link to an album (#album-…) or a song (#track-…). Phones get
     // the share sheet; elsewhere the link is copied.
     async function shareLink(hash, title, labelEl, label) {
-      const url = `${location.origin}${location.pathname}${hash}`;
+      // /listen/… shows the song's art in link previews, then opens this page at the hash.
+      const url = `${location.origin}/listen/${hash.slice(1)}`;
       if (navigator.share) {
         try { await navigator.share({ title, url }); } catch (e) { /* cancelled */ }
         return;
