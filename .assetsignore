@@ -5,3 +5,4 @@ wrangler.jsonc
 README.md
 CLAUDE.md
 tools
+worker.js

@@ -21,7 +21,8 @@ The page reads `albums.json` from the Beats media server (https://daily.shalonel
 - `logo.png`, `favicon*`, `icon-*.png`, `apple-touch-icon.png`: made from `tools/cover/logo-white.png`.
 - `dust.svg`: the dust and scratch layer of the film texture (the grain itself is drawn in code).
 - `site.webmanifest` and `sw.js`: make the site installable. The service worker caches only the site's own files; bump `VERSION` in `sw.js` when you change them.
-- `wrangler.jsonc` and `.assetsignore`: deploy the folder as a Cloudflare Worker with static assets, leaving `tools/`, this README and CLAUDE.md off the public site.
+- `worker.js`: builds a real page for every album (`/album/<album>`) and song (`/song/<album>/<song>`), plus `/sitemap.xml`, from `albums.json` on each request (cached five minutes). Search engines can read these without JavaScript; people get the same page with a player and a link into the main site. Everything else is served straight from the static files.
+- `wrangler.jsonc` and `.assetsignore`: deploy the folder as a Cloudflare Worker (`worker.js`) with static assets, leaving `tools/`, `worker.js`, this README and CLAUDE.md off the public site.
 
 ## Setup notes
 

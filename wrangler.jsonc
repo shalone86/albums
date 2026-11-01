@@ -1,9 +1,12 @@
 {
-  // Serves this folder as a static site (Cloudflare Workers static assets).
+  // Serves this folder as a static site (Cloudflare Workers static assets),
+  // plus worker.js for the album and song pages and the sitemap.
   // Workers Builds swaps in the dashboard's Worker name if it differs.
   "name": "albums",
+  "main": "worker.js",
   "compatibility_date": "2026-10-13",
   "assets": {
-    "directory": "."
+    "directory": ".",
+    "binding": "ASSETS"
   }
 }

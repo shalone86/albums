@@ -4,6 +4,10 @@
 
 The website (https://albums.shalonely.com) builds its album list with JavaScript, so the raw HTML has few links. Use the catalog file below instead. Everything is served from https://daily.shalonely.com/.
 
+## Pages
+
+- Every album has its own page at https://albums.shalonely.com/album/<album> and every song at https://albums.shalonely.com/song/<album>/<song>, listed in [sitemap.xml](https://albums.shalonely.com/sitemap.xml). Song pages include lyrics when known.
+
 ## Catalog
 
 - [albums.json](https://daily.shalonely.com/albums.json): a JSON list of albums, newest first.
