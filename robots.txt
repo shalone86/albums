@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://albums.shalonely.com/sitemap.xml
