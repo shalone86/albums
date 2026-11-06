@@ -1,0 +1,18 @@
+Painting image: candles-screenshot.png
+Save it as: candles-screenshot.png
+
+Crop: 0.51 0.45 0.65
+Light leak: series default
+Hue shift: none
+Scaling: --nearest
+
+Command (run from tools/cover/):
+python make_cover.py candles-screenshot.png "OUT_FOLDER" \
+  --crop 0.51 0.45 0.65 \
+  --nearest \
+  --title "CANDLES! Game Screenshot (Winter Night - Candle Bearer)" \
+  --artist "Shalone Cason" \
+  --year "2026" \
+  --museum "CANDLES! Game" \
+  --url "https://daily.shalonely.com" \
+  --license "Copyright © 2026 Shalone Cason"

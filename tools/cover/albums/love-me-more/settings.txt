@@ -1,0 +1,16 @@
+Painting image: https://www.artic.edu/iiif/2/57e7455f-9c4f-7b6d-ffac-6d2269258265/full/3000,/0/default.jpg
+Save it as: frith-artic-180709.jpg
+
+Crop: 0.50 0.44 0.88
+Light leak: series default
+Hue shift: none
+
+Command (run from tools/cover/):
+python make_cover.py frith-artic-180709.jpg "OUT_FOLDER" \
+  --crop 0.50 0.44 0.88 \
+  --title "The Lovers" \
+  --artist "William Powell Frith" \
+  --year "1855" \
+  --museum "The Art Institute of Chicago (Purchased with funds provided by Irving Lauf and Irene McNear; 2003.53)" \
+  --url "https://www.artic.edu/artworks/180709" \
+  --license "Public domain. The Art Institute of Chicago marks this object is_public_domain: true (checked via ArtIC API, object 180709, on 2026-11-06)."

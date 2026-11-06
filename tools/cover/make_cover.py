@@ -64,12 +64,13 @@ def load_srgb(path):
     return im.convert("RGB")
 
 
-def square_crop(im, cx, cy, side):
+def square_crop(im, cx, cy, side, nearest=False):
     w, h = im.size
     s = int(min(w, h) * side)
     x0 = min(max(int(cx * w - s / 2), 0), w - s)
     y0 = min(max(int(cy * h - s / 2), 0), h - s)
-    return im.crop((x0, y0, x0 + s, y0 + s)).resize((SIZE, SIZE), Image.LANCZOS)
+    resample = Image.NEAREST if nearest else Image.LANCZOS
+    return im.crop((x0, y0, x0 + s, y0 + s)).resize((SIZE, SIZE), resample)
 
 
 def soft_noise(rng, cells):
@@ -270,6 +271,7 @@ def main():
     p.add_argument("--light-leak", type=float, default=LIGHT_LEAK)
     p.add_argument("--hue", type=float, default=0)
     p.add_argument("--center", action="store_true")
+    p.add_argument("--nearest", action="store_true", help="use nearest-neighbor upscaling for pixel art")
     for field in ["title", "artist", "year", "museum", "url", "license"]:
         p.add_argument("--" + field, required=True)
     args = p.parse_args()
@@ -278,7 +280,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
 
     # Marks go on before the grunge so they age with the painting instead of looking pasted on.
-    painting = square_crop(load_srgb(args.painting), *args.crop)
+    painting = square_crop(load_srgb(args.painting), *args.crop, nearest=args.nearest)
     if args.hue:
         painting = shift_hue(painting, args.hue)
     cover = grunge(add_marks(painting, args.center), args.light_leak)
