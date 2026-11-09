@@ -1120,18 +1120,63 @@
       seeking = false;
     });
 
-    audio.addEventListener('play', () => setPlayIcon(true));
-    audio.addEventListener('pause', () => setPlayIcon(false));
-    audio.addEventListener('timeupdate', updateProgress);
+
+    // KEEP-ALIVE FOR LOCKED PHONES
+    // Some phones (Samsung especially) freeze the browser the instant a song
+    // ends with the screen locked, before the next song can start. A second
+    // player loops ten seconds of silence for as long as music should be
+    // playing, so the phone never sees a gap between songs. It stops when
+    // the listener pauses, at a sleep-timer end, or if no song starts within
+    // 30 seconds.
+    const keepAlive = new Audio('/silence.wav');
+    keepAlive.loop = true;
+    keepAlive.preload = 'none';
+    let gapStartedAt = 0;
+    const musicPlaying = () => !audio.paused && !audio.ended;
+    function startKeepAlive() {
+      gapStartedAt = 0;
+      if (keepAlive.paused) keepAlive.play().catch(() => {});
+    }
+    function stopKeepAlive() {
+      gapStartedAt = 0;
+      keepAlive.pause();
+    }
+    keepAlive.addEventListener('timeupdate', () => {
+      if (musicPlaying()) { gapStartedAt = 0; return; }
+      if (!gapStartedAt) gapStartedAt = Date.now();
+      else if (Date.now() - gapStartedAt > 30000) stopKeepAlive();
+    });
+    // Tell the lock screen where the song is (with the silent keep-alive
+    // also playing, the phone can't work it out on its own).
+    function reportPosition(el) {
+      const dur = el.duration;
+      if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState || !(dur > 0) || !isFinite(dur)) return;
+      try { navigator.mediaSession.setPositionState({ duration: dur, position: Math.min(el.currentTime, dur), playbackRate: el.playbackRate || 1 }); } catch (e) { /* ignore */ }
+    }
+    // A song that was meant to start while the phone was locked but never
+    // loaded: start it again on return instead of leaving it frozen.
+    document.addEventListener('visibilitychange', () => {
+      const el = audio;
+      if (!document.hidden && el && !el.paused && el.currentTime === 0 && el.readyState < 2) {
+        el.load();
+        el.play().catch(() => {});
+      }
+    });
+
+    audio.addEventListener('play', () => { startKeepAlive(); setPlayIcon(true); });
+    audio.addEventListener('pause', () => { stopKeepAlive(); setPlayIcon(false); });
+    audio.addEventListener('error', stopKeepAlive);
+    audio.addEventListener('timeupdate', () => { updateProgress(); reportPosition(audio); });
     audio.addEventListener('loadedmetadata', updateProgress);
     audio.addEventListener('ended', () => {
       if (sleepTimer.mode === 'end' || sleepTimer.fading) {
+        stopKeepAlive();
         setSleepTimer('off');
         setPlayIcon(false);
         return;
       }
       if (hasNext()) playNext();
-      else setPlayIcon(false);
+      else { stopKeepAlive(); setPlayIcon(false); }
     });
     document.getElementById('np-play').addEventListener('click', togglePlay);
     document.getElementById('np-next').addEventListener('click', playNext);
